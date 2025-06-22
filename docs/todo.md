@@ -6,3 +6,9 @@
 - TestBenches
     - everyth as of rn
     - lol do we wanna do a uvm env :3
+
+- other:
+    - generate waveforms for tests
+        - not sure hwo to with cocotb icl
+    - check violations via gds
+    - check area usage and see if it fits
