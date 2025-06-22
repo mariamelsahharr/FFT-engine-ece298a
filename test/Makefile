@@ -11,9 +11,8 @@ PROJECT_SOURCES = top_fft.sv \
                   fft_memory.sv \
                   display_controller.sv \
                   butterfly_unit.sv \
-                  bit_reversal.sv \
-                  fft_memory.sv
-
+                  bit_reversal.sv 
+				  
 ifneq ($(GATES),yes)
 
 # RTL simulation:
