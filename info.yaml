@@ -3,7 +3,7 @@ project:
   title:        "FFT Engine"      # Project title
   author:       "Mariam ElSahhar, Hadi Zaidi"      # Your name
   discord:      "marmareeta, vr._"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "4/8/16 bit FFT engine"      # One line description of what your project does
+  description:  "4 bit FFT engine"      # One line description of what your project does
   language:     "SystemVerilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
 
