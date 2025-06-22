@@ -12,7 +12,7 @@ module fft_memory (
     input  logic  [1:0] addr_b,         // read port B address
     output logic [15:0] data_out_b,     // read port B output
 
-    output logic        valid           // output is valid when high (1 cycle after en=1)
+    output logic        read_valid           // output is valid when high (1 cycle after en=1)
 );
 
     // 4-word x 16-bit memory
@@ -20,6 +20,7 @@ module fft_memory (
 
     // internal data registers for read outputs
     logic [15:0] reg_a, reg_b;
+    logic        valid;
 
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -38,14 +39,17 @@ module fft_memory (
 
             reg_a <= mem[addr_a];
             reg_b <= mem[addr_b];
-
             valid <= 1'b1;
+
         end else begin
             valid <= 1'b0;
         end
     end
 
+    //dual port read outputs
     assign data_out_a = reg_a;
     assign data_out_b = reg_b;
+    assign read_valid = valid;
+
 
 endmodule
