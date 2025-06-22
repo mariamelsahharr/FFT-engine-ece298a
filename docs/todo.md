@@ -1,0 +1,8 @@
+- RTL:
+    - implement display controller (low prio rn, idt we will be asked in subblock eval???? or maybe we will man idk)
+        - rlly need to figure out how to interface with the tt hardware
+        - useful links: https://github.com/TinyTapeout/tt-demo-pcb, check the prev project we found (should be on notion?)
+    -  top level project.sv file
+- TestBenches
+    - everyth as of rn
+    - lol do we wanna do a uvm env :3
