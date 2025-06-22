@@ -8,9 +8,8 @@ SRC_DIR = $(PWD)/../src
 
 PROJECT_SOURCES = top_fft.sv \
                   fft_engine.sv \
-                  fft_mem.sv \
+                  fft_memory.sv \
                   display_controller.sv \
-                  fft_display.sv \
                   butterfly_unit.sv \
                   bit_reversal.sv \
                   fft_memory.sv
