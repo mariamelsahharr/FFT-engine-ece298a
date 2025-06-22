@@ -1,11 +1,13 @@
 module butterfly_unit (
     input  logic        clk, // system clock
     input  logic        rst, // synch reset
+    input  logic        en,  // enable signal
     input  logic [15:0] A,   // Complex input A: [15:8] = Real, [7:0] = Imag 
     input  logic [15:0] B,   // Complex input B (complex)
     input  logic [15:0] T,   // Twiddle factor (complex)
     output logic [15:0] Pos, // A + T*B
-    output logic [15:0] Neg  // A - T*B
+    output logic [15:0] Neg, // A - T*B
+    output logic        valid // output is valid when high
 );
 
     //A, B real and imaginary parts, twiddle factor T real and imaginary parts
@@ -43,14 +45,20 @@ module butterfly_unit (
         imag_neg = Ai - Ti_int[15:8];
     end
 
-    // Output assignment with optional saturation
+// if resetm is high, reset outputs, NOT VALID OUTPUT (see if we want to change this?)
+// if enable is high, calculate outputs + valid 
+// if no enable, valid is low HOLDS PREVIOUS OUTPUTS
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             Pos <= 16'd0;
             Neg <= 16'd0;
-        end else begin
+            valid <= 1'b0;
+        end else if (en) begin
             Pos <= {real_pos[15:8], imag_pos[15:8]};
             Neg <= {real_neg[15:8], imag_neg[15:8]};
+            valid <= 1'b1;
+        end else begin
+            valid <= 1'b0;
         end
     end
 
