@@ -20,6 +20,7 @@ module memory_tb;
   reg clk;
   reg rst;
   reg en;
+  reg read_en;
   reg write_en;
   
   // Write port signals
@@ -37,11 +38,19 @@ module memory_tb;
   // Output valid signal
   wire read_valid;
 
+  // Test counter signal - will be set by Python test
+  reg [7:0] test_counter;
+  wire [7:0] current_test;
+
+  // Assign the test counter to a wire for monitoring
+  assign current_test = test_counter;
+
   // Instantiate the memory module (DUT)
   fft_memory dut (
       .clk(clk),
       .rst(rst),
       .en(en),
+      .read_en(read_en),
       .write_en(write_en),
       .addr_w(addr_w),
       .data_in(data_in),
