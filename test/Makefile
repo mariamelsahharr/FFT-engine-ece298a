@@ -5,7 +5,6 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-
 # Add timestamp for unique VCD files in US/Eastern timezone with colons between HH, MM, SS
 TIMESTAMP = $(shell TZ=US/Eastern date +%Y%m%d_%H:%M:%S)
 COMPILE_ARGS += -DTIMESTAMP=\"$(TIMESTAMP)\"
@@ -41,22 +40,9 @@ endif
 # Allow sharing configuration between design and testbench via `include`:
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
-# Include the testbench sources:
-VERILOG_SOURCES += $(PWD)/tb.v
-TOPLEVEL = tb
 
-# MODULE is the basename of the Python test file
-MODULE = test
+.PHONY: test-butterfly test-memory test-fft
 
-.PHONY: all test test-butterfly test-memory test-switch
-
-# Define sources for the butterfly test to simplify the rule
-BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
-
-all: test-butterfly test-memory test-switch
-
-# This rule is simplified to avoid path expansion issues.
-# It runs all tests found in the butterfly_unit directory.
 test-butterfly:
 	$(MAKE) clean
 	$(MAKE) sim \
@@ -88,15 +74,11 @@ test-memory:
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_tb_$(TIMESTAMP).vcd\""'
 
 #test-fft:
-#	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))" WAVES_DIR=$(PWD)/wave
-
-# Default test target
-test: all
+#	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))"
 
 # Phony target for cleaning up
 .PHONY: clean
 clean::
 	rm -rf sim_build* results.xml
-
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
