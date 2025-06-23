@@ -70,8 +70,26 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
         .done(fft_done)
     );
 
-    display_controller disp_ctrl (/* ... same as before ... */);
+    display_controller disp_ctrl ( .fsm_state_in(display_code), .seg_out(uo_out) );
+    // --- Display Logic ---
+    // Translates FSM state and counters into the correct display code.
+    always_comb begin
+        case (state)
+            S_IDLE, S_LOAD:
+                display_code = load_counter + 1;
 
+            S_FFT_READ_MEM, S_FFT_WAIT, S_FFT_WRITE_MEM:
+                // Any of the computation states should display 'C'.
+                display_code = 9;
+
+            S_OUTPUT_WAIT, S_OUTPUT_DRIVE:
+                // output_counter will be 0, 1, 2, or 3. We want to display 5, 6, 7, or 8.
+                display_code = output_counter + 5;
+            
+            default:
+                display_code = 0;
+        endcase
+    end
     // --- FSM Sequential Logic ---
     always_ff @(posedge clk) begin
         if (rst) begin
