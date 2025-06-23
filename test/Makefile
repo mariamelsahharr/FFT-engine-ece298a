@@ -70,8 +70,8 @@ test-butterfly:
 test-memory:
 	$(MAKE) sim \
 		MODULE=memory_test \
-		TOPLEVEL=fft_memory \
-		VERILOG_SOURCES="../src/fft_memory.sv" \
+		TOPLEVEL=memory_tb \
+		VERILOG_SOURCES="./memory_test/memory_tb.sv $../src/fft_memory.sv/fft_memory.sv" \
 		WAVES_DIR=$(PWD)/memory_test/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_tb_$(TIMESTAMP).vcd\""'
 
