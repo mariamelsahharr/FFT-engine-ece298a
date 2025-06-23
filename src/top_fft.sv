@@ -235,7 +235,6 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
         endcase
     end
     
-    assign disp_ctrl.fsm_state_in = display_code;
     // Output directly from the FFT engine's registered output
    always_comb begin
         case (output_counter)
