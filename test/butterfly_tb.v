@@ -9,22 +9,46 @@ module butterfly_tb ();
     $dumpvars(0, butterfly_tb);
     #1;
   end
-  
-  // Testbench signals
-  reg  signed [7:0] A_tb;
-  reg  signed [7:0] B_tb;
-  reg  signed [7:0] W_tb;
-  wire signed [7:0] plus_tb;
-  wire signed [7:0] minus_tb;
 
-  // Instantiate the butterfly unit with WIDTH=8
-  // This means 4-bit real and 4-bit imaginary parts
-  butterfly #(.WIDTH(8)) dut (
-      .A     (A_tb),
-      .B     (B_tb),
-      .W     (W_tb),
-      .plus  (plus_tb),
-      .minus (minus_tb)
+  // Clock and control signals
+  reg clk;
+  reg rst;
+  reg en;
+  
+  // Input data signals (8-bit packed complex)
+  reg [7:0] A;
+  reg [7:0] B;
+  reg [7:0] T;
+  
+  // Output signals
+  wire [7:0] Pos;
+  wire [7:0] Neg;
+  wire        valid;
+
+  // Golden Model outputs
+  wire [7:0] Pos_golden;
+  wire [7:0] Neg_golden;
+
+  // Instantiate the butterfly unit
+  butterfly_unit dut (
+      .clk(clk),
+      .rst(rst),
+      .en(en),
+      .A(A),
+      .B(B),
+      .T(T),
+      .Pos(Pos),
+      .Neg(Neg),
+      .valid(valid)
+  );
+
+  // 2. The combinational "source of truth" (Golden Model)
+  butterfly_golden #(.WIDTH(8)) golden_model (
+      .A_in(A),
+      .B_in(B),
+      .W_in(T),      // T maps to W
+      .plus_out(Pos_golden),
+      .minus_out(Neg_golden)
   );
 
 endmodule 
