@@ -7,10 +7,9 @@
     - top level block
  
 - others:
-  - update timing diagrams
-  - update blcok diagram
+  - update blcok diagram -> shouldnt be hard just remove bit reverser + add display/switch interfaces
   - Annotate waveforms same way we did in 124 labs
-  - ????
+
+
   - check violations via gds
   - check area usage and see if it fits
-  - line coverage (if time)
