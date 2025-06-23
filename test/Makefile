@@ -48,16 +48,17 @@ TOPLEVEL = tb
 # MODULE is the basename of the Python test file
 MODULE = test
 
-.PHONY: all test test-butterfly test-memory test-fft test-switch
+.PHONY: all test test-butterfly test-memory test-switch
 
 # Define sources for the butterfly test to simplify the rule
 BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
 
-all: test-butterfly test-memory test-fft test-switch
+all: test-butterfly test-memory test-switch
 
 # This rule is simplified to avoid path expansion issues.
 # It runs all tests found in the butterfly_unit directory.
 test-butterfly:
+	$(MAKE) clean
 	$(MAKE) sim \
 		MODULE=test_butterfly \
 		TOPLEVEL=butterfly_tb \
@@ -67,6 +68,7 @@ test-butterfly:
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/butterfly_unit/wave/butterfly_tb_$(TIMESTAMP).vcd\""'
 
 test-switch:
+	$(MAKE) clean
 	$(MAKE) sim \
 		MODULE=test_switch \
 		TOPLEVEL=switch_tb \
@@ -76,6 +78,7 @@ test-switch:
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/switch_interface/wave/switch_tb_$(TIMESTAMP).vcd\""'
 
 test-memory:
+	$(MAKE) clean
 	$(MAKE) sim \
 		MODULE=memory_test \
 		TOPLEVEL=memory_tb \
@@ -89,6 +92,11 @@ test-memory:
 
 # Default test target
 test: all
+
+# Phony target for cleaning up
+.PHONY: clean
+clean::
+	rm -rf sim_build* results.xml
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
