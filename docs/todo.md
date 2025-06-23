@@ -1,14 +1,15 @@
 - RTL:
-    - implement display controller (low prio rn, idt we will be asked in subblock eval???? or maybe we will man idk)
-        - rlly need to figure out how to interface with the tt hardware
-        - useful links: https://github.com/TinyTapeout/tt-demo-pcb, check the prev project we found (should be on notion?)
     -  top level project.sv file WITH CONTROL LOGIC AND THINGS CONNECTED!!!!!! IMPORTANT AS HECK
+    -  fft engine logic
 - TestBenches
-    - everyth as of rn
-    - lol do we wanna do a uvm env :3
-
-- other:
-    - generate waveforms for tests
-        - not sure hwo to with cocotb icl
-    - check violations via gds
-    - check area usage and see if it fits
+    - need to add more cases to memory one
+    - fft engine
+    - top level block
+ 
+- others:
+  - update timing diagrams
+  - update blcok diagram
+  - Annotate waveforms same way we did in 124 labs
+  - ????
+  - check violations via gds
+  - check area usage and see if it fits
