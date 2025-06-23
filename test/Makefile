@@ -44,29 +44,22 @@ TOPLEVEL = tb
 # MODULE is the basename of the Python test file
 MODULE = test
 
-# Test targets
-test-butterfly: MODULE = butterfly_unit.test
-test-butterfly: TOPLEVEL = butterfly_unit
-test-butterfly: VERILOG_SOURCES = $(SRC_DIR)/butterfly_unit.sv
+.PHONY: test-butterfly test-memory test-bitrev test-fft
 
-test-memory: MODULE = memory.test
-test-memory: TOPLEVEL = fft_memory
-test-memory: VERILOG_SOURCES = $(SRC_DIR)/fft_memory.sv
+test-butterfly:
+	$(MAKE) sim MODULE=butterfly_unit_test TOPLEVEL=butterfly_unit VERILOG_SOURCES="$(SRC_DIR)/butterfly_unit.sv"
 
-test-bitrev: MODULE = bit_reversal.test
-test-bitrev: TOPLEVEL = bit_reversal
-test-bitrev: VERILOG_SOURCES = $(SRC_DIR)/bit_reversal.sv
+test-memory:
+	$(MAKE) sim MODULE=memory_test TOPLEVEL=fft_memory VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv"
 
-test-fft: MODULE = fft_engine.test
-test-fft: TOPLEVEL = tt_um_FFT_engine
-test-fft: VERILOG_SOURCES = $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
+test-bitrev:
+	$(MAKE) sim MODULE=bit_reversal_test TOPLEVEL=bit_reversal VERILOG_SOURCES="$(SRC_DIR)/bit_reversal.sv"
+
+test-fft:
+	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))"
 
 # Default test target
 test: test-fft
-
-# Clean all test artifacts
-clean:
-	rm -rf test_artifacts sim_build results.xml
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
