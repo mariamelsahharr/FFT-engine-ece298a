@@ -1,10 +1,7 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module memory_tb (
-    output logic [15:0] data_out_a,
-    output logic [15:0] data_out_b
-);
+module memory_tb;
 
   // Dump the signals to a VCD file
   string vcd_name;

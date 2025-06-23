@@ -39,7 +39,9 @@ module fft_memory (
 
             reg_a <= mem[addr_a];
             reg_b <= mem[addr_b];
-            valid <= 1'b1;
+            
+            // valid is high only if en is high and write_en is low
+            valid <= !write_en;
 
         end else begin
             valid <= 1'b0;
