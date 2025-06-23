@@ -47,7 +47,7 @@ MODULE = test
 .PHONY: test-butterfly test-memory test-bitrev test-fft
 
 test-butterfly:
-	$(MAKE) sim MODULE=butterfly_unit_test TOPLEVEL=butterfly_unit VERILOG_SOURCES="$(SRC_DIR)/butterfly_unit.sv"
+	$(MAKE) sim MODULE=butterfly_unit_test TOPLEVEL=butterfly_tb VERILOG_SOURCES="$(SRC_DIR)/butterfly_unit.sv $(PWD)/butterfly_tb.v"
 
 test-memory:
 	$(MAKE) sim MODULE=memory_test TOPLEVEL=fft_memory VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv"
