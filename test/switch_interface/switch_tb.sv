@@ -28,8 +28,8 @@ module switch_tb ();
 
   // DUT
   switch_interface #(
-      .DEBOUNCE_BITS(16),
-      .DEBOUNCE_MAX(16'd5)  // Small value for fast test
+      .DEBOUNCE_BITS(10),
+      .DEBOUNCE_MAX(10'd5)  // Small value for fast test
   ) dut (
       .clk(clk),
       .rst(rst),

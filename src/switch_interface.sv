@@ -1,6 +1,6 @@
 module switch_interface #(
-    parameter DEBOUNCE_BITS = 16,
-    parameter DEBOUNCE_MAX = 16'd50000 // 1ms assuming 50 MHz clock
+    parameter DEBOUNCE_BITS = 10,
+    parameter DEBOUNCE_MAX = 10'd1000 // 1ms assuming 50 MHz clock
 )(
     input  logic clk,
     input  logic rst,

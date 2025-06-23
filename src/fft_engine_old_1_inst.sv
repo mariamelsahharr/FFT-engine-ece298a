@@ -1,4 +1,4 @@
-module fft_engineee #(parameter WIDTH = 16) (Add commentMore actions
+module fft_engineee #(parameter WIDTH = 16) (
     input  logic        clk,
     input  logic        rst,
     input  logic        en,
