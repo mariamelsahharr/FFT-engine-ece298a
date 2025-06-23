@@ -34,11 +34,12 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     wire  [15:0] mem_data_out_b;
     wire         mem_read_valid;
 
-    // FFT Engine Interface signals
+    // --- FFT Engine Interface signals (NO MORE ARRAY) ---
     logic        fft_start;
     wire         fft_done;
-    logic [15:0] fft_samples [0:3]; // Array to match engine's input
-    wire  [15:0] fft_freqs   [0:3]; // Array to match engine's output
+    // Four separate signals instead of an array
+    logic [15:0] fft_sample0, fft_sample1, fft_sample2, fft_sample3;
+    wire  [15:0] fft_freqs   [0:3];
 
     // --- System FSM States ---
     localparam [3:0]
@@ -73,7 +74,11 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     // Your specific FSM-based FFT engine
     fft_4point_16bit fft_core (
         .clk(clk), .reset(rst),
-        .samples(fft_samples),
+        // Connect the four separate sample signals
+        .sample0_in(fft_sample0),
+        .sample1_in(fft_sample1),
+        .sample2_in(fft_sample2),
+        .sample3_in(fft_sample3),
         .start(fft_start),
         .freqs(fft_freqs),
         .done(fft_done)
@@ -108,8 +113,11 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
             load_counter <= 0;
             output_counter <= 0;
             mem_read_cycle <= 0;
-            // Initialize the array on reset
-            for (int i = 0; i < 4; i++) fft_samples[i] <= '0;
+            // Initialize the separate sample registers
+            fft_sample0 <= '0;
+            fft_sample1 <= '0;
+            fft_sample2 <= '0;
+            fft_sample3 <= '0;
         end else if (ena) begin
             state <= next_state;
 
@@ -124,18 +132,14 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
                 if (state == S_OUTPUT_DRIVE) output_counter <= output_counter + 1;
             end
             
-            // --- Latch FFT Samples (THE KEY FIX) ---
-            // The data from memory is valid one cycle after we set the address.
-            // We latch the data that was read in the previous cycle.
+            // --- Latch FFT Samples into separate registers ---
             if (state == S_FFT_READ) begin
-                if (mem_read_cycle == 1'b0) begin // We just finished the first read cycle
-                    // The data from addresses 0 & 1 is now on the output ports
-                    fft_samples[0] <= mem_data_out_a;
-                    fft_samples[1] <= mem_data_out_b;
-                end else begin // We just finished the second read cycle
-                    // The data from addresses 2 & 3 is now on the output ports
-                    fft_samples[2] <= mem_data_out_a;
-                    fft_samples[3] <= mem_data_out_b;
+                if (mem_read_cycle == 1'b0) begin // Finished reading first pair
+                    fft_sample0 <= mem_data_out_a; // Latch x0
+                    fft_sample1 <= mem_data_out_b; // Latch x1
+                end else begin // Finished reading second pair
+                    fft_sample2 <= mem_data_out_a; // Latch x2
+                    fft_sample3 <= mem_data_out_b; // Latch x3
                 end
             end
             

@@ -1,7 +1,11 @@
 module fft_4point_16bit (
     input             clk,
     input             reset,
-    input      [15:0] samples [0:3]
+    // Flattened input ports
+    input      [15:0] sample0_in,
+    input      [15:0] sample1_in,
+    input      [15:0] sample2_in,
+    input      [15:0] sample3_in,
     input             start, 
     output reg [15:0] freqs   [0:3],
     output reg        done
@@ -49,10 +53,10 @@ module fft_4point_16bit (
                 // assign values
                 // run first butterfly units
                 // bA - X0, bB - X2, fA - X1, fB - X3
-                b1_A <= samples[0];
-                b1_B <= samples[2];
-                b2_A <= samples[1];
-                b2_B <= samples[3];
+                b1_A <= sample0_in;
+                b1_B <= sample2_in;
+                b2_A <= sample1_in;
+                b2_B <= sample3_in;
                 b1_W <= W_0_2;
                 b2_W <= W_0_2;
 
