@@ -1,6 +1,8 @@
-// nano_fft_top.sv
-// This top-level module is specifically designed to control the provided
-// fft_4point_16bit engine, which uses a start/done handshake and array I/O.
+// nano_fft_top.sv (Final Version)
+// This top-level module is designed to control:
+// 1. The provided fft_4point_16bit engine (FSM-based, start/done).
+// 2. A dual-port read memory for faster data loading.
+// 3. A purely combinational butterfly unit (used inside the engine).
 
 module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     input  wire [7:0] ui_in,
@@ -20,11 +22,17 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     wire load_pulse;
     wire output_pulse;
 
-    // Memory Interface signals (using a simpler single-port memory now)
-    logic [1:0]  mem_addr;
-    logic        mem_we;
-    logic [15:0] mem_wdata;
-    wire  [15:0] mem_rdata;
+    // Dual-Port Memory Interface signals
+    logic        mem_en;
+    logic        mem_read_en;
+    logic        mem_write_en;
+    logic  [1:0] mem_addr_w;
+    logic [15:0] mem_data_in;
+    logic  [1:0] mem_addr_a;
+    logic  [1:0] mem_addr_b;
+    wire  [15:0] mem_data_out_a;
+    wire  [15:0] mem_data_out_b;
+    wire         mem_read_valid;
 
     // FFT Engine Interface signals
     logic        fft_start;
@@ -36,32 +44,33 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     localparam [3:0]
         S_IDLE          = 4'd0,
         S_LOAD          = 4'd1,
-        S_FFT_READ_MEM  = 4'd2,
+        S_FFT_READ      = 4'd2, // A single state can read 2x samples
         S_FFT_START     = 4'd3,
         S_FFT_WAIT      = 4'd4,
-        S_FFT_WRITE_MEM = 4'd5, // This state is no longer needed since engine outputs directly
-        S_OUTPUT_WAIT   = 4'd6,
-        S_OUTPUT_DRIVE  = 4'd7;
+        S_OUTPUT_WAIT   = 4'd5,
+        S_OUTPUT_DRIVE  = 4'd6;
     
     logic [3:0] state, next_state;
     
     // --- Counters ---
     logic [1:0] load_counter;
     logic [1:0] output_counter;
-    logic [1:0] mem_read_counter;
+    logic       mem_read_cycle; // A simple 0/1 to track which pair of samples to read
 
     // --- Module Instantiations ---
-
     switch_interface sw_if_load (.clk(clk), .rst(rst), .sw_in(ui_in[0]), .pulse_out(load_pulse));
     switch_interface sw_if_output (.clk(clk), .rst(rst), .sw_in(ui_in[1]), .pulse_out(output_pulse));
 
-    // Using a simpler single-port RAM as dual-port is not needed for this FSM flow
-    // and this saves area.
-    fft_memory_single_port memory (
-        .clk(clk), .addr(mem_addr), .we(mem_we), .wdata(mem_wdata), .rdata(mem_rdata)
+    fft_memory memory (
+        .clk(clk), .rst(rst), .en(mem_en),
+        .read_en(mem_read_en), .write_en(mem_write_en),
+        .addr_w(mem_addr_w), .data_in(mem_data_in),
+        .addr_a(mem_addr_a), .data_out_a(mem_data_out_a),
+        .addr_b(mem_addr_b), .data_out_b(mem_data_out_b),
+        .read_valid(mem_read_valid)
     );
 
-    // Instantiate your specific FFT engine
+    // Your specific FSM-based FFT engine
     fft_4point_16bit fft_core (
         .clk(clk), .reset(rst),
         .samples(fft_samples),
@@ -71,6 +80,7 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     );
 
     display_controller disp_ctrl ( .fsm_state_in(display_code), .seg_out(uo_out) );
+
     // --- Display Logic ---
     // Translates FSM state and counters into the correct display code.
     always_comb begin
@@ -78,7 +88,7 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
             S_IDLE, S_LOAD:
                 display_code = load_counter + 1;
 
-            S_FFT_READ_MEM, S_FFT_WAIT, S_FFT_WRITE_MEM:
+            S_FFT_READ, S_FFT_WAIT, S_FFT_START:
                 // Any of the computation states should display 'C'.
                 display_code = 9;
 
@@ -90,32 +100,39 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
                 display_code = 0;
         endcase
     end
+
     // --- FSM Sequential Logic ---
     always_ff @(posedge clk) begin
         if (rst) begin
             state <= S_IDLE;
             load_counter <= 0;
             output_counter <= 0;
-            mem_read_counter <= 0;
+            mem_read_cycle <= 0;
+            for (int i = 0; i < 4; i++) fft_samples[i] <= '0;
         end else if (ena) begin
             state <= next_state;
-            
-            if (next_state != state) begin // On state change, reset counters
-                if (next_state == S_FFT_READ_MEM) mem_read_counter <= 0;
-            end else begin
-                if (state == S_LOAD)         load_counter <= load_counter + 1;
-                if (state == S_FFT_READ_MEM) mem_read_counter <= mem_read_counter + 1;
-                if (state == S_OUTPUT_DRIVE) output_counter <= output_counter + 1;
-            end
 
-            // Latch the memory read data into the correct array slot
-            if (state == S_FFT_READ_MEM) begin
-                fft_samples[mem_read_counter] <= mem_rdata;
+            // Increment counters on state transitions
+            if (next_state == S_LOAD)         load_counter <= load_counter + 1;
+            if (next_state == S_FFT_READ)     mem_read_cycle <= ~mem_read_cycle;
+            if (next_state == S_OUTPUT_DRIVE) output_counter <= output_counter + 1;
+            
+            // Latch the memory read data into the correct array slots
+            // This happens one cycle after the read addresses are set.
+            if (state == S_FFT_READ) begin
+                if (mem_read_cycle == 0) begin // We just read x0 and x1
+                    fft_samples[0] <= mem_data_out_a;
+                    fft_samples[1] <= mem_data_out_b;
+                end else begin // We just read x2 and x3
+                    fft_samples[2] <= mem_data_out_a;
+                    fft_samples[3] <= mem_data_out_b;
+                end
             end
             
             if (next_state == S_IDLE && state == S_OUTPUT_WAIT) begin
                 load_counter <= 0;
                 output_counter <= 0;
+                mem_read_cycle <= 0;
             end
         end
     end
@@ -124,65 +141,85 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     always_comb begin
         next_state   = state;
         uio_oe       = 8'h00;
-        mem_addr     = '0;
-        mem_we       = 1'b0;
-        mem_wdata    = '0;
+        mem_en       = 1'b0;
+        mem_read_en  = 1'b0;
+        mem_write_en = 1'b0;
+        mem_addr_w   = '0;
+        mem_data_in  = '0;
+        mem_addr_a   = '0;
+        mem_addr_b   = '0;
         fft_start    = 1'b0;
 
         case (state)
             S_IDLE: if (load_pulse && load_counter < 4) next_state = S_LOAD;
-                    else if (load_counter == 4) next_state = S_FFT_READ_MEM;
+                    else if (load_counter == 4) next_state = S_FFT_READ;
 
             S_LOAD: begin
-                mem_we    = 1'b1;
-                mem_addr  = load_counter;
-                mem_wdata = {{4{uio_in[7]}}, uio_in[7:4], {4{uio_in[3]}}, uio_in[3:0]};
-                next_state = S_IDLE;
+                mem_en       = 1'b1;
+                mem_write_en = 1'b1;
+                mem_addr_w   = load_counter;
+                mem_data_in  = {{4{uio_in[7]}}, uio_in[7:4], {4{uio_in[3]}}, uio_in[3:0]};
+                next_state   = S_IDLE;
             end
 
-            S_FFT_READ_MEM: begin
-                // Sequentially read 4 samples from memory into the fft_samples array
-                mem_addr = mem_read_counter;
-                if (mem_read_counter == 3) begin
+            S_FFT_READ: begin
+                // This state runs for two cycles to read all 4 samples
+                mem_en      = 1'b1;
+                mem_read_en = 1'b1;
+                if (mem_read_cycle == 0) begin // First cycle: read x0 and x1
+                    mem_addr_a = 2'b00;
+                    mem_addr_b = 2'b01;
+                    next_state = S_FFT_READ;
+                end else begin // Second cycle: read x2 and x3
+                    mem_addr_a = 2'b10;
+                    mem_addr_b = 2'b11;
+                    // After this read, we are ready to start the FFT
                     next_state = S_FFT_START;
-                end else begin
-                    next_state = S_FFT_READ_MEM;
                 end
             end
             
             S_FFT_START: begin
-                // All samples are now in the fft_samples array. Pulse start.
-                fft_start = 1'b1;
+                // All samples are now latched in the fft_samples array. Pulse start.
+                fft_start  = 1'b1;
                 next_state = S_FFT_WAIT;
             end
 
             S_FFT_WAIT: begin
-                // The engine's FSM is now running. Wait for the 'done' signal.
-                if (fft_done) begin
-                    // The 'fft_freqs' output array now holds the valid results.
-                    // We can go directly to outputting them. No need to write back to RAM.
-                    next_state = S_OUTPUT_WAIT;
-                end else begin
-                    next_state = S_FFT_WAIT;
-                end
+                if (fft_done) next_state = S_OUTPUT_WAIT;
+                else next_state = S_FFT_WAIT;
             end
-            
-            // S_FFT_WRITE_MEM is no longer needed. We will output directly from fft_freqs.
 
             S_OUTPUT_WAIT: if (output_pulse && output_counter < 4) next_state = S_OUTPUT_DRIVE;
                            else if (output_counter == 4) next_state = S_IDLE;
 
             S_OUTPUT_DRIVE: begin
-                uio_oe = 8'hFF;
-                // No memory read needed here.
-                next_state = S_OUTPUT_WAIT;
+                uio_oe       = 8'hFF;
+                mem_en       = 1'b1;
+                mem_read_en  = 1'b1;
+                // Use Port A of the memory for single-value output reads
+                mem_addr_a   = output_counter;
+                next_state   = S_OUTPUT_WAIT;
             end
         endcase
     end
     
-    // --- Output Logic ---
-    // The uio_out now comes directly from the FFT engine's output register.
-    // This saves us from having to write the results back to memory first.
+    // --- Display and Output Logic ---
+    logic [3:0] display_code;
+    always_comb begin
+        case (state)
+            S_IDLE, S_LOAD:
+                display_code = load_counter + 1;
+            S_FFT_READ, S_FFT_START, S_FFT_WAIT:
+                display_code = 9; // Code for 'C'
+            S_OUTPUT_WAIT, S_OUTPUT_DRIVE:
+                display_code = output_counter + 5;
+            default:
+                display_code = 0;
+        endcase
+    end
+    
+    assign disp_ctrl.fsm_state_in = display_code;
+    // Output directly from the FFT engine's registered output
     assign uio_out = {fft_freqs[output_counter][15:12], fft_freqs[output_counter][7:4]};
 
 endmodule
