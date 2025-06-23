@@ -32,7 +32,11 @@ module butterfly_unit #(parameter WIDTH = 8) (
     wire [WIDTH-1:0] pos_comb = { a_real + product_real_trunc, a_imag + product_imag_trunc };
     wire [WIDTH-1:0] neg_comb = { a_real - product_real_trunc, a_imag - product_imag_trunc };
 
-    // Sequential output stage - only update when enabled
+    // Combinational output
+    assign Pos = pos_comb;
+    assign Neg = neg_comb;
+
+    /* Sequential output stage - only update when enabled
     always_ff @(posedge clk) begin
         if (rst) begin
             Pos   <= '0;
@@ -45,6 +49,6 @@ module butterfly_unit #(parameter WIDTH = 8) (
         end else begin
             valid <= 1'b0;
         end
-    end
+    end */
 
 endmodule 
