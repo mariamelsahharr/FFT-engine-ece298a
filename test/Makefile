@@ -6,6 +6,10 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 
+# Add timestamp for unique VCD files in US/Eastern timezone with colons between HH, MM, SS
+TIMESTAMP := $(shell TZ=US/Eastern date +%Y%m%d_%H:%M:%S)
+COMPILE_ARGS += -DTIMESTAMP=\"$(TIMESTAMP)\"
+
 PROJECT_SOURCES = top_fft.sv \
                   fft_engine.sv \
                   fft_memory.sv \
@@ -59,7 +63,7 @@ test-butterfly:
 		MODULE=test_butterfly \
 		TOPLEVEL=butterfly_tb \
 		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.v ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
-		PYTHONPATH=/Users/mariamelsahhar/Documents/code/FFT-engine-ece298a/test/butterfly_unit
+		PYTHONPATH=$(PWD)/butterfly_unit
 
 test-memory:
 	$(MAKE) sim MODULE=memory_test TOPLEVEL=fft_memory VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv"
