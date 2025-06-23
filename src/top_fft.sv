@@ -34,12 +34,12 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     wire  [15:0] mem_data_out_b;
     wire         mem_read_valid;
 
-    // --- FFT Engine Interface signals (NO MORE ARRAY) ---
+    // --- FFT Engine Interface signals (FULLY FLATTENED) ---
     logic        fft_start;
     wire         fft_done;
-    // Four separate signals instead of an array
     logic [15:0] fft_sample0, fft_sample1, fft_sample2, fft_sample3;
-    wire  [15:0] fft_freqs   [0:3];
+    // Four separate wires for the frequency outputs
+    wire  [15:0] fft_freq0, fft_freq1, fft_freq2, fft_freq3;
 
     // --- System FSM States ---
     localparam [3:0]
@@ -74,13 +74,14 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     // Your specific FSM-based FFT engine
     fft_4point_16bit fft_core (
         .clk(clk), .reset(rst),
-        // Connect the four separate sample signals
-        .sample0_in(fft_sample0),
-        .sample1_in(fft_sample1),
-        .sample2_in(fft_sample2),
-        .sample3_in(fft_sample3),
+        .sample0_in(fft_sample0), .sample1_in(fft_sample1),
+        .sample2_in(fft_sample2), .sample3_in(fft_sample3),
         .start(fft_start),
-        .freqs(fft_freqs),
+        // Connect to the new flattened output ports
+        .freq0_out(fft_freq0),
+        .freq1_out(fft_freq1),
+        .freq2_out(fft_freq2),
+        .freq3_out(fft_freq3),
         .done(fft_done)
     );
 
@@ -236,6 +237,14 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     
     assign disp_ctrl.fsm_state_in = display_code;
     // Output directly from the FFT engine's registered output
-    assign uio_out = {fft_freqs[output_counter][15:12], fft_freqs[output_counter][7:4]};
+   always_comb begin
+        case (output_counter)
+            2'b00: uio_out = {fft_freq0[15:12], fft_freq0[7:4]};
+            2'b01: uio_out = {fft_freq1[15:12], fft_freq1[7:4]};
+            2'b10: uio_out = {fft_freq2[15:12], fft_freq2[7:4]};
+            2'b11: uio_out = {fft_freq3[15:12], fft_freq3[7:4]};
+            default: uio_out = 8'h00;
+        endcase
+    end
 
 endmodule

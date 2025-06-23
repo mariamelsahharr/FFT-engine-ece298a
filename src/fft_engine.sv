@@ -1,14 +1,17 @@
 module fft_4point_16bit (
     input             clk,
     input             reset,
-    // Flattened input ports
     input      [15:0] sample0_in,
     input      [15:0] sample1_in,
     input      [15:0] sample2_in,
     input      [15:0] sample3_in,
-    input             start, 
-    output reg [15:0] freqs   [0:3],
-    output reg        done
+    input             start,
+    // Flattened output ports
+    output logic [15:0] freq0_out,
+    output logic [15:0] freq1_out,
+    output logic [15:0] freq2_out,
+    output logic [15:0] freq3_out,
+    output logic      done
 );
     wire [15:0] W_0_2 = 16'b1000000000000000;
     wire [15:0] W_0_4 = 16'b1000000000000000;
@@ -37,19 +40,26 @@ module fft_4point_16bit (
     butterfly #(16) b1(b1_A, b1_B, b1_W, b1_plus, b1_minus);
     butterfly #(16) b2(b2_A, b2_B, b2_W, b2_plus, b2_minus);
 
+    
+
     always @(posedge clk) begin
 
-        current_stage <= current_stage_d;
-        
-        case (current_stage)
-            RESET: begin
-                // hold at 0 whatever that means
-                freqs[0] <= 16'b0;
-                freqs[1] <= 16'b0;
-                freqs[2] <= 16'b0;
-                freqs[3] <= 16'b0;
-            end
-            STAGE_1: begin
+        if (reset) begin // Add reset for outputs here
+            freq0_out <= '0;
+            freq1_out <= '0;
+            freq2_out <= '0;
+            freq3_out <= '0;
+            done      <= 1'b0;
+            current_stage <= RESET;
+        end else begin
+            current_stage <= current_stage_d;
+            
+            case (current_stage)
+                RESET: begin
+                    // No need to reset freqs here anymore, done in main reset
+                    done <= 1'b0; // Ensure done is low when not in DONE state
+                end
+                STAGE_1: begin
                 // assign values
                 // run first butterfly units
                 // bA - X0, bB - X2, fA - X1, fB - X3
@@ -71,17 +81,18 @@ module fft_4point_16bit (
                 b1_W <= W_0_4;
                 b2_W <= W_1_4;
             end
-            DONE: begin
-                //outputs set here
-                freqs[0] <= b1_plus;
-                freqs[1] <= b2_plus;
-                freqs[2] <= b1_minus;
-                freqs[3] <= b2_minus;
-                done <= 1;
-            end
-        endcase
-    end
+                DONE: begin
+                    // Assign to the new flattened outputs
+                    freq0_out <= b1_plus;
+                    freq1_out <= b2_plus;
+                    freq2_out <= b1_minus;
+                    freq3_out <= b2_minus;
+                    done      <= 1'b1;
+                end
+            endcase
+        end
 
+    end
     always_comb begin
         case(current_stage)
             RESET: begin
