@@ -73,8 +73,15 @@ test-memory:
 		WAVES_DIR=$(PWD)/memory_test/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_tb_$(TIMESTAMP).vcd\""'
 
-#test-fft:
-#	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))"
+test-fft:
+	$(MAKE) clean
+	$(MAKE) sim \
+		MODULE=fft_simple_test \
+		TOPLEVEL=fft_tb \
+		VERILOG_SOURCES="./fft_test/fft_tb.sv ./fft_test/fft_4point_16bit.sv ./butterfly_unit/butterfly_golden.sv ../src/fft_engine.sv ../src/butterfly_unit.sv" \
+		PYTHONPATH=$(PWD)/fft_test \
+		WAVES_DIR=$(PWD)/fft_test/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/fft_test/wave/fft_tb_$(TIMESTAMP).vcd\""'
 
 # Phony target for cleaning up
 .PHONY: clean
