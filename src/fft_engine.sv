@@ -14,8 +14,8 @@ module fft_engine #(parameter WIDTH = 16) (
     output logic signed [WIDTH-1:0] X3_out
 );
     // Twiddle factors
-    localparam [WIDTH-1:0] W_1_0 = 16'h0100; // 1 + 0j
-    localparam [WIDTH-1:0] W_1_1 = 16'h00FF; // 0 - 1j
+    localparam [15:0] W_1_0 = 16'h8000;
+    localparam [15:0] W_1_1 = 16'h0080;
 
     // FSM States
     localparam [1:0] S_IDLE    = 2'b00;
