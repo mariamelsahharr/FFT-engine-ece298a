@@ -22,11 +22,11 @@ module display_controller (
             4'd2:  seg_out = D_2;
             4'd3:  seg_out = D_3;
             4'd4:  seg_out = D_4;
-            4'd5:  seg_out = D_C;
-            4'd6:  seg_out = D_5;
-            4'd7:  seg_out = D_6;
-            4'd8:  seg_out = D_7;
-            4'd9:  seg_out = D_8;
+            4'd5:  seg_out = D_5;
+            4'd6:  seg_out = D_6;
+            4'd7:  seg_out = D_7;
+            4'd8:  seg_out = D_8;
+            4'd9:  seg_out = D_C;
             default: seg_out = D_BLANK;
         endcase
     end
