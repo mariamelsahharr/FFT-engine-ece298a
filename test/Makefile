@@ -71,9 +71,9 @@ test-memory:
 	$(MAKE) sim \
 		MODULE=memory_test \
 		TOPLEVEL=fft_memory \
-		VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv" \
+		VERILOG_SOURCES="../src/fft_memory.sv" \
 		WAVES_DIR=$(PWD)/memory_test/wave \
-		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_$(TIMESTAMP).vcd\""'
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_tb_$(TIMESTAMP).vcd\""'
 
 #test-fft:
 #	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))" WAVES_DIR=$(PWD)/wave
