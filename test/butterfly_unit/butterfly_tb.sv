@@ -9,7 +9,11 @@ module butterfly_tb (
   // Dump the signals to a VCD file
   string vcd_name;
   initial begin
-    vcd_name = $sformatf("butterfly_tb_%0t.vcd", $time);
+`ifdef VCD_PATH
+    vcd_name = `VCD_PATH;
+`else
+    vcd_name = {"butterfly_tb_", `TIMESTAMP, ".vcd"};
+`endif
     $dumpfile(vcd_name);
     $dumpvars(0, butterfly_tb);
     #1;

@@ -7,7 +7,7 @@ TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 
 # Add timestamp for unique VCD files in US/Eastern timezone with colons between HH, MM, SS
-TIMESTAMP := $(shell TZ=US/Eastern date +%Y%m%d_%H:%M:%S)
+TIMESTAMP = $(shell TZ=US/Eastern date +%Y%m%d_%H:%M:%S)
 COMPILE_ARGS += -DTIMESTAMP=\"$(TIMESTAMP)\"
 
 PROJECT_SOURCES = top_fft.sv \
@@ -52,7 +52,7 @@ MODULE = test
 .PHONY: all test test-butterfly test-memory test-bitrev test-fft test-golden
 
 # Define sources for the butterfly test to simplify the rule
-BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.v ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
+BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
 
 all: test-butterfly test-memory test-bitrev test-fft test-golden
 
@@ -62,24 +62,27 @@ test-butterfly:
 	$(MAKE) sim \
 		MODULE=test_butterfly \
 		TOPLEVEL=butterfly_tb \
-		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.v ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
-		PYTHONPATH=$(PWD)/butterfly_unit
+		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
+		PYTHONPATH=$(PWD)/butterfly_unit \
+		WAVES_DIR=$(PWD)/butterfly_unit/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/butterfly_unit/wave/butterfly_tb_$(TIMESTAMP).vcd\""'
 
 test-memory:
-	$(MAKE) sim MODULE=memory_test TOPLEVEL=fft_memory VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv"
+	$(MAKE) sim MODULE=memory_test TOPLEVEL=fft_memory VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv" WAVES_DIR=$(PWD)/memory_test/wave
 
 test-bitrev:
-	$(MAKE) sim MODULE=bit_reversal_test TOPLEVEL=bit_reversal VERILOG_SOURCES="$(SRC_DIR)/bit_reversal.sv"
+	$(MAKE) sim MODULE=bit_reversal_test TOPLEVEL=bit_reversal VERILOG_SOURCES="$(SRC_DIR)/bit_reversal.sv" WAVES_DIR=$(PWD)/bit_reversal/wave
 
 test-fft:
-	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))"
+	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))" WAVES_DIR=$(PWD)/wave
 
 test-golden:
 	$(MAKE) sim \
 		MODULE=test_golden_only \
 		TOPLEVEL=butterfly_tb \
-		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.v ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
-		PYTHONPATH=/Users/mariamelsahhar/Documents/code/FFT-engine-ece298a/test/butterfly_unit
+		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
+		PYTHONPATH=/Users/mariamelsahhar/Documents/code/FFT-engine-ece298a/test/butterfly_unit \
+		WAVES_DIR=$(PWD)/butterfly_unit/wave
 
 # Default test target
 test: all
