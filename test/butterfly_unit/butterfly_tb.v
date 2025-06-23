@@ -1,11 +1,16 @@
 `default_nettype none
 `timescale 1ns / 1ps
 
-module butterfly_tb ();
+module butterfly_tb (
+  output logic [7:0] plus,
+  output logic [7:0] minus
+);
 
   // Dump the signals to a VCD file
+  string vcd_name;
   initial begin
-    $dumpfile("butterfly_tb.vcd");
+    vcd_name = $sformatf("butterfly_tb_%0t.vcd", $time);
+    $dumpfile(vcd_name);
     $dumpvars(0, butterfly_tb);
     #1;
   end
@@ -25,11 +30,7 @@ module butterfly_tb ();
   wire [7:0] Neg;
   wire        valid;
 
-  // Golden Model outputs
-  wire [7:0] Pos_golden;
-  wire [7:0] Neg_golden;
-
-  // Instantiate the butterfly unit
+  // Instantiate the butterfly unit (DUT)
   butterfly_unit dut (
       .clk(clk),
       .rst(rst),
@@ -42,13 +43,13 @@ module butterfly_tb ();
       .valid(valid)
   );
 
-  // 2. The combinational "source of truth" (Golden Model)
+  // Instantiate the golden model for comparison
   butterfly_golden #(.WIDTH(8)) golden_model (
-      .A_in(A),
-      .B_in(B),
-      .W_in(T),      // T maps to W
-      .plus_out(Pos_golden),
-      .minus_out(Neg_golden)
+      .A(A),
+      .B(B),
+      .W(T),      // T maps to W
+      .plus(plus),
+      .minus(minus)
   );
 
 endmodule 

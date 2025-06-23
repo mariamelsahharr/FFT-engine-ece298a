@@ -45,10 +45,21 @@ TOPLEVEL = tb
 # MODULE is the basename of the Python test file
 MODULE = test
 
-.PHONY: test-butterfly test-memory test-bitrev test-fft
+.PHONY: all test test-butterfly test-memory test-bitrev test-fft test-golden
 
+# Define sources for the butterfly test to simplify the rule
+BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.v ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
+
+all: test-butterfly test-memory test-bitrev test-fft test-golden
+
+# This rule is simplified to avoid path expansion issues.
+# It runs all tests found in the butterfly_unit directory.
 test-butterfly:
-	$(MAKE) sim MODULE=butterfly_unit_test TOPLEVEL=butterfly_tb VERILOG_SOURCES="../src/butterfly_unit.sv ../src/butterfly_golden.sv ./butterfly_tb.v"
+	$(MAKE) sim \
+		MODULE=test_butterfly \
+		TOPLEVEL=butterfly_tb \
+		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.v ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
+		PYTHONPATH=/Users/mariamelsahhar/Documents/code/FFT-engine-ece298a/test/butterfly_unit
 
 test-memory:
 	$(MAKE) sim MODULE=memory_test TOPLEVEL=fft_memory VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv"
@@ -59,8 +70,15 @@ test-bitrev:
 test-fft:
 	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))"
 
+test-golden:
+	$(MAKE) sim \
+		MODULE=test_golden_only \
+		TOPLEVEL=butterfly_tb \
+		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.v ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
+		PYTHONPATH=/Users/mariamelsahhar/Documents/code/FFT-engine-ece298a/test/butterfly_unit
+
 # Default test target
-test: test-fft
+test: all
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
