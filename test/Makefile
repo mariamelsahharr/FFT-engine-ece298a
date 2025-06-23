@@ -48,12 +48,12 @@ TOPLEVEL = tb
 # MODULE is the basename of the Python test file
 MODULE = test
 
-.PHONY: all test test-butterfly test-memory test-fft
+.PHONY: all test test-butterfly test-memory test-fft test-switch
 
 # Define sources for the butterfly test to simplify the rule
 BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
 
-all: test-butterfly test-memory test-fft
+all: test-butterfly test-memory test-fft test-switch
 
 # This rule is simplified to avoid path expansion issues.
 # It runs all tests found in the butterfly_unit directory.
@@ -65,6 +65,15 @@ test-butterfly:
 		PYTHONPATH=$(PWD)/butterfly_unit \
 		WAVES_DIR=$(PWD)/butterfly_unit/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/butterfly_unit/wave/butterfly_tb_$(TIMESTAMP).vcd\""'
+
+test-switch:
+	$(MAKE) sim \
+		MODULE=test_switch \
+		TOPLEVEL=switch_tb \
+		VERILOG_SOURCES="./switch_interface/switch_tb.sv ../src/switch_interface.sv" \
+		PYTHONPATH=$(PWD)/switch_interface \
+		WAVES_DIR=$(PWD)/butterfly_interface/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/switch_interface/wave/switch_tb_$(TIMESTAMP).vcd\""'
 
 test-memory:
 	$(MAKE) sim \

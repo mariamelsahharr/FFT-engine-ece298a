@@ -2,10 +2,10 @@ module switch_interface #(
     parameter DEBOUNCE_BITS = 16,
     parameter DEBOUNCE_MAX = 16'd50000 // 1ms assuming 50 MHz clock
 )(
-    input  wire clk,
-    input  wire rst,
-    input  wire sw_in,
-    output wire pulse_out
+    input  logic clk,
+    input  logic rst,
+    input  logic sw_in,
+    output logic pulse_out
 );
             
     logic [DEBOUNCE_BITS-1:0] debounce_counter;
@@ -20,7 +20,7 @@ module switch_interface #(
         end else begin
             state_prev <= state_debounced;
             
-            if (sw_in[i] != state_debounced) begin
+            if (sw_in != state_debounced) begin
                 debounce_counter <= debounce_counter + 1;
                 if (debounce_counter == DEBOUNCE_MAX) begin
                     state_debounced <= ~state_debounced;
@@ -32,6 +32,6 @@ module switch_interface #(
         end
     end
     
-    assign pulse_out[i] = state_debounced & ~state_prev; // Rising edge detection
+    assign pulse_out = state_debounced & ~state_prev; // Rising edge detection
 
 endmodule
