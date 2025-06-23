@@ -40,6 +40,8 @@ jobs:
         uses: TinyTapeout/tt-gds-action/gl_test@ttihp25b
         with:
           pdk: ihp
+          testbench: "test/gate_level_tb.sv"
+          module: "test_gate_level"
 
   viewer:
     needs: gds
