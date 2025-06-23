@@ -1,5 +1,5 @@
 module display_controller (
-    input  wire [3:0] fsm_state_in, // TBD, TODO: reconsider?
+    input  wire [3:0] fsm_state_in,
     output logic [7:0] seg_out
 );
 
