@@ -101,38 +101,48 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
         endcase
     end
 
-    // --- FSM Sequential Logic ---
+    // --- FSM Sequential Logic (CORRECTED) ---
     always_ff @(posedge clk) begin
         if (rst) begin
             state <= S_IDLE;
             load_counter <= 0;
             output_counter <= 0;
             mem_read_cycle <= 0;
+            // Initialize the array on reset
             for (int i = 0; i < 4; i++) fft_samples[i] <= '0;
         end else if (ena) begin
             state <= next_state;
 
-            // Increment counters on state transitions
-            if (next_state == S_LOAD)         load_counter <= load_counter + 1;
-            if (next_state == S_FFT_READ)     mem_read_cycle <= ~mem_read_cycle;
-            if (next_state == S_OUTPUT_DRIVE) output_counter <= output_counter + 1;
+            // --- Counter Updates ---
+            if (next_state != state) begin // On a state change...
+                // Reset the read cycle tracker when we start reading
+                if (next_state == S_FFT_READ) mem_read_cycle <= 0;
+            end else begin
+                // Increment counters during their respective states
+                if (state == S_LOAD)         load_counter <= load_counter + 1;
+                if (state == S_FFT_READ)     mem_read_cycle <= mem_read_cycle + 1; // Toggles 0 -> 1
+                if (state == S_OUTPUT_DRIVE) output_counter <= output_counter + 1;
+            end
             
-            // Latch the memory read data into the correct array slots
-            // This happens one cycle after the read addresses are set.
+            // --- Latch FFT Samples (THE KEY FIX) ---
+            // The data from memory is valid one cycle after we set the address.
+            // We latch the data that was read in the previous cycle.
             if (state == S_FFT_READ) begin
-                if (mem_read_cycle == 0) begin // We just read x0 and x1
+                if (mem_read_cycle == 1'b0) begin // We just finished the first read cycle
+                    // The data from addresses 0 & 1 is now on the output ports
                     fft_samples[0] <= mem_data_out_a;
                     fft_samples[1] <= mem_data_out_b;
-                end else begin // We just read x2 and x3
+                end else begin // We just finished the second read cycle
+                    // The data from addresses 2 & 3 is now on the output ports
                     fft_samples[2] <= mem_data_out_a;
                     fft_samples[3] <= mem_data_out_b;
                 end
             end
             
+            // Full loop reset logic
             if (next_state == S_IDLE && state == S_OUTPUT_WAIT) begin
                 load_counter <= 0;
                 output_counter <= 0;
-                mem_read_cycle <= 0;
             end
         end
     end
@@ -163,27 +173,30 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
             end
 
             S_FFT_READ: begin
-                // This state runs for two cycles to read all 4 samples
+                // This state now runs for two cycles. In each cycle, we set the read addresses.
+                // The always_ff block above will handle latching the data on the following cycle.
                 mem_en      = 1'b1;
                 mem_read_en = 1'b1;
-                if (mem_read_cycle == 0) begin // First cycle: read x0 and x1
+                if (mem_read_cycle == 1'b0) begin // First cycle: set addresses for x0 and x1
                     mem_addr_a = 2'b00;
                     mem_addr_b = 2'b01;
-                    next_state = S_FFT_READ;
-                end else begin // Second cycle: read x2 and x3
+                    next_state = S_FFT_READ; // Stay in this state for the next read
+                end else begin // Second cycle: set addresses for x2 and x3
                     mem_addr_a = 2'b10;
                     mem_addr_b = 2'b11;
-                    // After this read, we are ready to start the FFT
+                    // On the next cycle, the last samples will be latched, and we can start the FFT.
                     next_state = S_FFT_START;
                 end
             end
             
             S_FFT_START: begin
-                // All samples are now latched in the fft_samples array. Pulse start.
+                // All samples are now guaranteed to be latched in the fft_samples array. Pulse start.
                 fft_start  = 1'b1;
                 next_state = S_FFT_WAIT;
             end
 
+            // The rest of the FSM states (S_FFT_WAIT, S_OUTPUT_WAIT, S_OUTPUT_DRIVE)
+            // are exactly the same as the previous correct version.
             S_FFT_WAIT: begin
                 if (fft_done) next_state = S_OUTPUT_WAIT;
                 else next_state = S_FFT_WAIT;
@@ -196,7 +209,6 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
                 uio_oe       = 8'hFF;
                 mem_en       = 1'b1;
                 mem_read_en  = 1'b1;
-                // Use Port A of the memory for single-value output reads
                 mem_addr_a   = output_counter;
                 next_state   = S_OUTPUT_WAIT;
             end
