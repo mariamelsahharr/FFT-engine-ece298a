@@ -11,7 +11,8 @@ PROJECT_SOURCES = top_fft.sv \
                   fft_memory.sv \
                   display_controller.sv \
                   butterfly_unit.sv \
-                  bit_reversal.sv 
+                  bit_reversal.sv \
+                  switch_interface.sv
 				  
 ifneq ($(GATES),yes)
 

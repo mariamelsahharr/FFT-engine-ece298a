@@ -1,41 +1,33 @@
 module display_controller (
-    input  logic        clk,
-    input  logic        rst,
-    input  logic [2:0]  main_state,
-    input  logic        switch_0_latched_once,
-    input  logic        switch_0_latched_twice,
-    input  logic        switch_1_latched_once,
-    input  logic        switch_1_latched_twice,
-    output logic [7:0]  display_out
+    input  wire [3:0] fsm_state_in, // TBD, TODO: reconsider?
+    output logic [7:0] seg_out
 );
 
-    // Segment encodings
-    localparam SEG_1 = 8'b00000110; // '1'
-    localparam SEG_2 = 8'b01011011; // '2'
-    localparam SEG_3 = 8'b01001111; // '3'
-    localparam SEG_4 = 8'b01100110; // '4'
-    localparam SEG_C = 8'b00111001; // 'C'
-    localparam SEG_BLANK = 8'b00000000;
+    // 7-segment patterns for 1-8, C
+    localparam [7:0]
+        D_1 = 8'b00001100, // 1
+        D_2 = 8'b01011010, // 2
+        D_3 = 8'b01001110, // 3
+        D_4 = 8'b01100110, // 4
+        D_5 = 8'b01101100, // 5
+        D_6 = 8'b01111100, // 6
+        D_7 = 8'b00001110, // 7
+        D_8 = 8'b01111110, // 8
+        D_C = 8'b00111000, // C
+        D_BLANK = 8'b0;
 
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            display_out <= SEG_BLANK;
-        end else begin
-            case (1'b1)
-                // Input phase
-                (main_state == 3'd1 && !switch_0_latched_once):    display_out <= SEG_1;
-                (main_state == 3'd1 && switch_0_latched_once && !switch_0_latched_twice): display_out <= SEG_2;
-                
-                // Computing FFT
-                (main_state == 3'd2):                              display_out <= SEG_C;
-
-                // Output phase
-                (main_state == 3'd3 && !switch_1_latched_once):    display_out <= SEG_3;
-                (main_state == 3'd3 && switch_1_latched_once && !switch_1_latched_twice): display_out <= SEG_4;
-
-                default:                                           display_out <= SEG_BLANK;
-            endcase
-        end
+    always_comb begin
+        case (fsm_state_in)
+            4'd1:  seg_out = D_1;
+            4'd2:  seg_out = D_2;
+            4'd3:  seg_out = D_3;
+            4'd4:  seg_out = D_4;
+            4'd5:  seg_out = D_C;
+            4'd6:  seg_out = D_5;
+            4'd7:  seg_out = D_6;
+            4'd8:  seg_out = D_7;
+            4'd9:  seg_out = D_8;
+            default: seg_out = D_BLANK;
+        endcase
     end
-
 endmodule
