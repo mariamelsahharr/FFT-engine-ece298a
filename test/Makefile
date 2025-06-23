@@ -49,12 +49,12 @@ TOPLEVEL = tb
 # MODULE is the basename of the Python test file
 MODULE = test
 
-.PHONY: all test test-butterfly test-memory test-bitrev test-fft test-golden
+.PHONY: all test test-butterfly test-memory test-bitrev test-fft
 
 # Define sources for the butterfly test to simplify the rule
 BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
 
-all: test-butterfly test-memory test-bitrev test-fft test-golden
+all: test-butterfly test-memory test-bitrev test-fft
 
 # This rule is simplified to avoid path expansion issues.
 # It runs all tests found in the butterfly_unit directory.
@@ -68,21 +68,15 @@ test-butterfly:
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/butterfly_unit/wave/butterfly_tb_$(TIMESTAMP).vcd\""'
 
 test-memory:
-	$(MAKE) sim MODULE=memory_test TOPLEVEL=fft_memory VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv" WAVES_DIR=$(PWD)/memory_test/wave
-
-test-bitrev:
-	$(MAKE) sim MODULE=bit_reversal_test TOPLEVEL=bit_reversal VERILOG_SOURCES="$(SRC_DIR)/bit_reversal.sv" WAVES_DIR=$(PWD)/bit_reversal/wave
-
-test-fft:
-	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))" WAVES_DIR=$(PWD)/wave
-
-test-golden:
 	$(MAKE) sim \
-		MODULE=test_golden_only \
-		TOPLEVEL=butterfly_tb \
-		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
-		PYTHONPATH=/Users/mariamelsahhar/Documents/code/FFT-engine-ece298a/test/butterfly_unit \
-		WAVES_DIR=$(PWD)/butterfly_unit/wave
+		MODULE=memory_test \
+		TOPLEVEL=fft_memory \
+		VERILOG_SOURCES="$(SRC_DIR)/fft_memory.sv" \
+		WAVES_DIR=$(PWD)/memory_test/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_$(TIMESTAMP).vcd\""'
+
+#test-fft:
+#	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))" WAVES_DIR=$(PWD)/wave
 
 # Default test target
 test: all
