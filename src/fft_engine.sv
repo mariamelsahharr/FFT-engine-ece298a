@@ -13,79 +13,110 @@ module fft_engine #(parameter WIDTH = 16) (
     output logic signed [WIDTH-1:0] X2_out,
     output logic signed [WIDTH-1:0] X3_out
 );
-    // Twiddle Factors
-    localparam [15:0] W_1_0 = 16'h0100;
-    localparam [15:0] W_1_1 = 16'h00FF;
+    // Twiddle factors
+    localparam [WIDTH-1:0] W_1_0 = 16'h0100; // 1 + 0j
+    localparam [WIDTH-1:0] W_1_1 = 16'h00FF; // 0 - 1j
 
-    // FSM States for sequencing the 4 butterfly ops
-    localparam [2:0]
-        S_IDLE   = 3'd0,
-        S_S1_B0  = 3'd1, // Stage 1, Butterfly 0 (x0, x2)
-        S_S1_B1  = 3'd2, // Stage 1, Butterfly 1 (x1, x3)
-        S_S2_B0  = 3'd3, // Stage 2, Butterfly 0
-        S_S2_B1  = 3'd4, // Stage 2, Butterfly 1
-        S_DONE   = 3'd5;
+    // FSM States
+    localparam [1:0] S_IDLE    = 2'b00;
+    localparam [1:0] S_STAGE_1 = 2'b01;
+    localparam [1:0] S_STAGE_2 = 2'b10;
+    localparam [1:0] S_VALID   = 2'b11;
 
-    logic [2:0] state, next_state;
+    logic [1:0] state, next_state;
 
-    // Registers to hold the intermediate results between stages
-    reg signed [WIDTH-1:0] s1_p0, s1_n0, s1_p1, s1_n1;
+    logic signed [WIDTH-1:0] s1_p0, s1_n0; // Stage 1, butterfly 0 results
+    logic signed [WIDTH-1:0] s1_p1, s1_n1; // Stage 1, butterfly 1 results
 
-    // Wires to feed the single butterfly unit
-    logic signed [WIDTH-1:0] bfly_A_in, bfly_B_in, bfly_T_in;
-    wire  signed [WIDTH-1:0] bfly_Pos_out, bfly_Neg_out;
-    wire  bfly_valid;
+    // Butterfly I/O
+    logic bfly0_en, bfly1_en;
+    wire  bfly0_valid, bfly1_valid;
+    logic signed [WIDTH-1:0] bfly0_A_in, bfly0_B_in, bfly0_T_in;
+    logic signed [WIDTH-1:0] bfly1_A_in, bfly1_B_in, bfly1_T_in;
+    wire  signed [WIDTH-1:0] bfly0_Pos_out, bfly0_Neg_out;
+    wire  signed [WIDTH-1:0] bfly1_Pos_out, bfly1_Neg_out;
 
-    // Instantiate Butterfly Unit
-    butterfly_unit #(.WIDTH(WIDTH)) the_one_butterfly (
-        .clk(clk), .rst(~rst_n), .en(state != S_IDLE && state != S_DONE),
-        .A(bfly_A_in), .B(bfly_B_in), .T(bfly_T_in),
-        .Pos(bfly_Pos_out), .Neg(bfly_Neg_out), .valid(bfly_valid)
+    butterfly_unit #(.WIDTH(WIDTH)) bfly0 (
+        .clk(clk), .rst(rst), .en(bfly0_en),
+        .A(bfly0_A_in), .B(bfly0_B_in), .T(bfly0_T_in),
+        .Pos(bfly0_Pos_out), .Neg(bfly0_Neg_out), .valid(bfly0_valid)
+    );
+    butterfly_unit #(.WIDTH(WIDTH)) bfly1 (
+        .clk(clk), .rst(rst), .en(bfly1_en),
+        .A(bfly1_A_in), .B(bfly1_B_in), .T(bfly1_T_in),
+        .Pos(bfly1_Pos_out), .Neg(bfly1_Neg_out), .valid(bfly1_valid)
     );
 
-    // --- FSM and Datapath Control ---
-    always_ff @(posedge clk or posedge rst) begin
+    // Control
+    always_ff @(posedge clk) begin
         if (rst) begin
             state <= S_IDLE;
-            valid <= 1'b0;
             X0_out <= '0; X1_out <= '0; X2_out <= '0; X3_out <= '0;
             s1_p0 <= '0; s1_n0 <= '0; s1_p1 <= '0; s1_n1 <= '0;
         end else begin
             state <= next_state;
-            valid <= (next_state == S_DONE);
-            
-            // Latch results when the butterfly is valid
-            if (bfly_valid) begin
-                case(state)
-                    S_S1_B0: begin s1_p0 <= bfly_Pos_out; s1_n0 <= bfly_Neg_out; end
-                    S_S1_B1: begin s1_p1 <= bfly_Pos_out; s1_n1 <= bfly_Neg_out; end
-                    S_S2_B0: begin X0_out <= bfly_Pos_out; X2_out <= bfly_Neg_out; end
-                    S_S2_B1: begin X1_out <= bfly_Pos_out; X3_out <= bfly_Neg_out; end
-                endcase
+
+            // Latch intermediate results when butterfly outputs are valid
+            if (bfly0_valid && bfly1_valid) begin
+                if (state == S_STAGE_1) begin
+                    s1_p0 <= bfly0_Pos_out;
+                    s1_n0 <= bfly0_Neg_out;
+                    s1_p1 <= bfly1_Pos_out;
+                    s1_n1 <= bfly1_Neg_out;
+                end else if (state == S_STAGE_2) begin
+                    X0_out <= bfly0_Pos_out;
+                    X2_out <= bfly0_Neg_out;
+                    X1_out <= bfly1_Pos_out;
+                    X3_out <= bfly1_Neg_out;
+                end
             end
         end
     end
 
     always_comb begin
         next_state = state;
-        // Default inputs to butterfly
-        bfly_A_in = '0; bfly_B_in = '0; bfly_T_in = '0;
+        valid = 1'b0;
         
-        case(state)
-            S_IDLE: if (en) next_state = S_S1_B0;
-            S_S1_B0: if (bfly_valid) next_state = S_S1_B1;
-            S_S1_B1: if (bfly_valid) next_state = S_S2_B0;
-            S_S2_B0: if (bfly_valid) next_state = S_S2_B1;
-            S_S2_B1: if (bfly_valid) next_state = S_DONE;
-            S_DONE:  if (!en) next_state = S_IDLE;
-        endcase
+        // Default butterfly inputs
+        bfly0_en = 1'b0; bfly1_en = 1'b0;
+        bfly0_A_in = '0; bfly0_B_in = '0; bfly0_T_in = '0;
+        bfly1_A_in = '0; bfly1_B_in = '0; bfly1_T_in = '0;
         
-        // Mux inputs to the butterfly based on current FSM state
-        case(state)
-            S_S1_B0: begin bfly_A_in=x0_in;  bfly_B_in=x2_in;  bfly_T_in=W_1_0; end
-            S_S1_B1: begin bfly_A_in=x1_in;  bfly_B_in=x3_in;  bfly_T_in=W_1_0; end
-            S_S2_B0: begin bfly_A_in=s1_p0;  bfly_B_in=s1_p1;  bfly_T_in=W_1_0; end
-            S_S2_B1: begin bfly_A_in=s1_n0;  bfly_B_in=s1_n1;  bfly_T_in=W_1_1; end
+        case (state)
+            S_IDLE:
+                if (en) begin
+                    next_state = S_STAGE_1;
+                end
+            
+            S_STAGE_1: begin
+                // Enable butterflies and provide Stage 1 inputs
+                bfly0_en = 1'b1; bfly1_en = 1'b1;
+                bfly0_A_in = x0_in; bfly0_B_in = x2_in; bfly0_T_in = W_1_0;
+                bfly1_A_in = x1_in; bfly1_B_in = x3_in; bfly1_T_in = W_1_0;
+                
+                if (bfly0_valid && bfly1_valid) begin
+                    next_state = S_STAGE_2;
+                end
+            end
+            
+            S_STAGE_2: begin
+                // Enable butterflies and provide Stage 2 inputs from our registers
+                bfly0_en = 1'b1; bfly1_en = 1'b1;
+                bfly0_A_in = s1_p0; bfly0_B_in = s1_p1; bfly0_T_in = W_1_0;
+                bfly1_A_in = s1_n0; bfly1_B_in = s1_n1; bfly1_T_in = W_1_1;
+                
+                if (bfly0_valid && bfly1_valid) begin
+                    next_state = S_VALID;
+                end
+            end
+
+            S_VALID: begin
+                valid = 1'b1;
+                if (!en) begin // Wait for master to de-assert enable before resetting
+                    next_state = S_IDLE;
+                end
+            end
         endcase
     end
+
 endmodule
