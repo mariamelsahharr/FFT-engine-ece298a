@@ -1,0 +1,102 @@
+$date
+	Mon Jun 23 01:06:30 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module memory_tb $end
+$var wire 1 ! read_valid $end
+$var wire 16 " data_out_b [15:0] $end
+$var wire 16 # data_out_a [15:0] $end
+$var reg 2 $ addr_a [1:0] $end
+$var reg 2 % addr_b [1:0] $end
+$var reg 2 & addr_w [1:0] $end
+$var reg 1 ' clk $end
+$var reg 16 ( data_in [15:0] $end
+$var reg 1 ) en $end
+$var reg 1 * rst $end
+$var reg 1 + write_en $end
+$scope module dut $end
+$var wire 2 , addr_a [1:0] $end
+$var wire 2 - addr_b [1:0] $end
+$var wire 2 . addr_w [1:0] $end
+$var wire 1 ' clk $end
+$var wire 16 / data_in [15:0] $end
+$var wire 16 0 data_out_a [15:0] $end
+$var wire 16 1 data_out_b [15:0] $end
+$var wire 1 ) en $end
+$var wire 1 ! read_valid $end
+$var wire 1 * rst $end
+$var wire 1 + write_en $end
+$var reg 16 2 reg_a [15:0] $end
+$var reg 16 3 reg_b [15:0] $end
+$var reg 1 4 valid $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+04
+b0 3
+b0 2
+b0 1
+b0 0
+bx /
+bx .
+bx -
+bx ,
+x+
+0*
+x)
+bx (
+1'
+bx &
+bx %
+bx $
+b0 #
+b0 "
+0!
+$end
+#5000
+0'
+#10000
+b1001000110100 (
+b1001000110100 /
+b0 &
+b0 .
+1+
+1)
+1'
+#15000
+0'
+#20000
+b0 $
+b0 ,
+0+
+1!
+14
+bx "
+bx 1
+bx 3
+bx #
+bx 0
+bx 2
+1'
+#25000
+0'
+#30000
+b1001000110100 #
+b1001000110100 0
+b1001000110100 2
+1'
+#35000
+0'
+#40000
+1'
+#40001
