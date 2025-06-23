@@ -13,3 +13,4 @@
   - ????
   - check violations via gds
   - check area usage and see if it fits
+  - line coverage (if time)
