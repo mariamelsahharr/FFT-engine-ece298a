@@ -22,7 +22,6 @@ project:
     - "fft_memory.sv"
     - "display_controller.sv"
     - "butterfly_unit.sv"
-    - "bit_reversal.sv"
     - "switch_interface.sv"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.

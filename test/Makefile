@@ -15,7 +15,6 @@ PROJECT_SOURCES = top_fft.sv \
                   fft_memory.sv \
                   display_controller.sv \
                   butterfly_unit.sv \
-                  bit_reversal.sv \
                   switch_interface.sv
 				  
 ifneq ($(GATES),yes)
@@ -49,12 +48,12 @@ TOPLEVEL = tb
 # MODULE is the basename of the Python test file
 MODULE = test
 
-.PHONY: all test test-butterfly test-memory test-bitrev test-fft
+.PHONY: all test test-butterfly test-memory test-fft
 
 # Define sources for the butterfly test to simplify the rule
 BUTTERFLY_SOURCES = ./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv
 
-all: test-butterfly test-memory test-bitrev test-fft
+all: test-butterfly test-memory test-fft
 
 # This rule is simplified to avoid path expansion issues.
 # It runs all tests found in the butterfly_unit directory.
@@ -71,7 +70,8 @@ test-memory:
 	$(MAKE) sim \
 		MODULE=memory_test \
 		TOPLEVEL=memory_tb \
-		VERILOG_SOURCES="./memory_test/memory_tb.sv $../src/fft_memory.sv/fft_memory.sv" \
+		VERILOG_SOURCES="./memory_test/memory_tb.sv ../src/fft_memory.sv" \
+		PYTHONPATH=$(PWD)/memory_test \
 		WAVES_DIR=$(PWD)/memory_test/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_tb_$(TIMESTAMP).vcd\""'
 
