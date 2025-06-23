@@ -27,7 +27,9 @@ jobs:
         run: |
           cd test
           make clean
-          make
+          make clean
+          make test-butterfly
+          make test-memory
           # make will return success even if the test fails, so check for failure in the results.xml
           ! grep failure results.xml
 
