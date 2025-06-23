@@ -1,0 +1,450 @@
+$date
+	Sun Jun 22 23:45:44 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module butterfly_tb $end
+$var wire 1 ! valid $end
+$var wire 8 " plus [7:0] $end
+$var wire 8 # minus [7:0] $end
+$var wire 8 $ Pos [7:0] $end
+$var wire 8 % Neg [7:0] $end
+$var reg 8 & A [7:0] $end
+$var reg 8 ' B [7:0] $end
+$var reg 8 ( T [7:0] $end
+$var reg 1 ) clk $end
+$var reg 1 * en $end
+$var reg 1 + rst $end
+$scope module dut $end
+$var wire 8 , A [7:0] $end
+$var wire 8 - B [7:0] $end
+$var wire 8 . T [7:0] $end
+$var wire 1 ) clk $end
+$var wire 1 * en $end
+$var wire 1 + rst $end
+$var wire 4 / t_real [3:0] $end
+$var wire 4 0 t_imag [3:0] $end
+$var wire 4 1 product_real_trunc [3:0] $end
+$var wire 8 2 product_real [7:0] $end
+$var wire 4 3 product_imag_trunc [3:0] $end
+$var wire 8 4 product_imag [7:0] $end
+$var wire 8 5 pos_comb [7:0] $end
+$var wire 8 6 neg_comb [7:0] $end
+$var wire 4 7 b_real [3:0] $end
+$var wire 4 8 b_imag [3:0] $end
+$var wire 4 9 a_real [3:0] $end
+$var wire 4 : a_imag [3:0] $end
+$var parameter 32 ; HALF_WIDTH $end
+$var parameter 32 < WIDTH $end
+$var reg 8 = Neg [7:0] $end
+$var reg 8 > Pos [7:0] $end
+$var reg 1 ! valid $end
+$upscope $end
+$scope module golden_model $end
+$var wire 8 ? A [7:0] $end
+$var wire 8 @ B [7:0] $end
+$var wire 8 A W [7:0] $end
+$var wire 4 B w_real [3:0] $end
+$var wire 4 C w_imag [3:0] $end
+$var wire 4 D product_real_trunc [3:0] $end
+$var wire 8 E product_real [7:0] $end
+$var wire 4 F product_imag_trunc [3:0] $end
+$var wire 8 G product_imag [7:0] $end
+$var wire 8 H plus [7:0] $end
+$var wire 8 I minus [7:0] $end
+$var wire 4 J b_real [3:0] $end
+$var wire 4 K b_imag [3:0] $end
+$var parameter 32 L WIDTH $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b1000 L
+b1000 <
+b100 ;
+$end
+#0
+$dumpvars
+bx K
+bx J
+bx I
+bx H
+bx G
+bx F
+bx E
+bx D
+bx C
+bx B
+bx A
+bx @
+bx ?
+b0 >
+b0 =
+bx :
+bx 9
+bx 8
+bx 7
+bx 6
+bx 5
+bx 4
+bx 3
+bx 2
+bx 1
+bx 0
+bx /
+bx .
+bx -
+bx ,
+0+
+x*
+1)
+bx (
+bx '
+bx &
+b0 %
+b0 $
+bx #
+bx "
+0!
+$end
+#5000
+0)
+#10000
+b0 1
+b10001 5
+b10001 6
+b0 3
+b0 D
+b10001 "
+b10001 H
+b10001 #
+b10001 I
+b0 F
+b10 2
+b10 4
+b1 /
+b0 0
+b10 E
+b10 G
+b1 B
+b0 C
+b10 7
+b10 8
+b10 J
+b10 K
+b1 9
+b1 :
+1*
+b10000 (
+b10000 .
+b10000 A
+b100010 '
+b100010 -
+b100010 @
+b10001 &
+b10001 ,
+b10001 ?
+1)
+#15000
+0)
+#20000
+1!
+b10001 %
+b10001 =
+b10001 $
+b10001 >
+1)
+#25000
+0)
+#30000
+1)
+#35000
+0)
+#40000
+1)
+#45000
+0)
+#50000
+1)
+#55000
+0)
+#60000
+1)
+#65000
+0)
+#70000
+1)
+#75000
+0)
+#80000
+1)
+#85000
+0)
+#90000
+1)
+#95000
+0)
+#100000
+1)
+#105000
+0)
+#110000
+1)
+#115000
+0)
+#120000
+1)
+#125000
+0)
+#130000
+1)
+#135000
+0)
+#140000
+1)
+#145000
+0)
+#150000
+1)
+#155000
+0)
+#160000
+1)
+#165000
+0)
+#170000
+1)
+#175000
+0)
+#180000
+1)
+#185000
+0)
+#190000
+1)
+#195000
+0)
+#200000
+1)
+#205000
+0)
+#210000
+0*
+1)
+#215000
+0)
+#220000
+0!
+1)
+#220001
+1+
+#225001
+0)
+#230001
+0+
+b0 %
+b0 =
+b0 $
+b0 >
+1)
+#235001
+0)
+#240001
+1)
+#245001
+0)
+#250001
+1)
+#255001
+0)
+#260001
+1)
+#265001
+0)
+#270001
+1*
+1)
+#275001
+0)
+#280001
+1!
+b10001 %
+b10001 =
+b10001 $
+b10001 >
+1)
+#285001
+0)
+#290001
+1)
+#290002
+1+
+#295002
+0)
+#300002
+0+
+0!
+b0 %
+b0 =
+b0 $
+b0 >
+1)
+#305002
+0)
+#310002
+1!
+b10001 %
+b10001 =
+b10001 $
+b10001 >
+1)
+#315002
+0)
+#320002
+1)
+#325002
+0)
+#330002
+1)
+#335002
+0)
+#340002
+1)
+#345002
+0)
+#350002
+1)
+#355002
+0)
+#360002
+1)
+#365002
+0)
+#370002
+1)
+#375002
+0)
+#380002
+1)
+#385002
+0)
+#390002
+1)
+#395002
+0)
+#400002
+1)
+#405002
+0)
+#410002
+1)
+#415002
+0)
+#420002
+1)
+#425002
+0)
+#430002
+1)
+#435002
+0)
+#440002
+1)
+#445002
+0)
+#450002
+1)
+#455002
+0)
+#460002
+1)
+#465002
+0)
+#470002
+1)
+#475002
+0)
+#480002
+1)
+#485002
+0)
+#490002
+1)
+#495002
+0)
+#500002
+1)
+#505002
+0)
+#510002
+1+
+1)
+#515002
+0)
+#520002
+0!
+b0 %
+b0 =
+b0 $
+b0 >
+1)
+#525002
+0)
+#530002
+1)
+#535002
+0)
+#540002
+1)
+#545002
+0)
+#550002
+1)
+#555002
+0)
+#560002
+1)
+#565002
+0)
+#570002
+1)
+#575002
+0)
+#580002
+1)
+#585002
+0)
+#590002
+1)
+#595002
+0)
+#600002
+1)
+#605002
+0)
+#610002
+0+
+1)
+#615002
+0)
+#620002
+1!
+b10001 %
+b10001 =
+b10001 $
+b10001 >
+1)
+#620003
+
+string vcd_name;
+initial begin
+    vcd_name = $sformatf("butterfly_tb_%0t.vcd", $time);
+    $dumpfile(vcd_name);
+    $dumpvars(0, butterfly_tb);
+    #1;
+end
