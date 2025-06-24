@@ -32,8 +32,7 @@ module fft_4point_16bit (
         STAGE2_0 = 3'd4,
         STAGE2_1 = 3'd5,
         STAGE2_2 = 3'd6,
-        STAGE2_3 = 3'd7,
-        DONE     = 3'd8
+        DONE     = 3'd7
     } state_t;
 
     state_t state, next_state;
