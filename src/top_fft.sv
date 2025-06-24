@@ -15,12 +15,12 @@ module tt_um_FFT_engine (
     wire output_pulse = ui_in[1];
     
     // Sample storage (4 complex 8-bit samples)
-    logic [7:0] samples_real[0:3];
-    logic [7:0] samples_imag[0:3];
+    logic signed [7:0] samples_real[0:3];
+    logic signed [7:0] samples_imag[0:3];
     
     // FFT output storage
-    logic [7:0] fft_real[0:3];
-    logic [7:0] fft_imag[0:3];
+    logic signed [7:0] fft_real[0:3];
+    logic signed [7:0] fft_imag[0:3];
     
     // Control state
     logic [1:0] sample_counter;
@@ -28,10 +28,13 @@ module tt_um_FFT_engine (
     logic processing, done;
     
     // Twiddle factors (W4^0 = 1, W4^1 = -j)
-    localparam [7:0] W0_real = 8'h80; // 1.0 fixed-point (Q1.7)
-    localparam [7:0] W0_imag = 8'h00;
-    localparam [7:0] W1_real = 8'h00;
-    localparam [7:0] W1_imag = 8'h80; // -j fixed-point
+    localparam logic signed [7:0] W0_real = 8'sh80; // 1.0 fixed-point (Q1.7)
+    localparam logic signed [7:0] W0_imag = 8'sh00;
+    localparam logic signed [7:0] W1_real = 8'sh00;
+    localparam logic signed [7:0] W1_imag = 8'sh80; // -j fixed-point
+    
+    // Intermediate products
+    logic signed [15:0] product_real, product_imag;
     
     // Display state encoding
     logic [3:0] display_state;
@@ -63,14 +66,16 @@ module tt_um_FFT_engine (
             output_counter <= 0;
             processing <= 0;
             done <= 0;
-            samples_real <= '{default:0};
-            samples_imag <= '{default:0};
+            for (int i = 0; i < 4; i++) begin
+                samples_real[i] <= 0;
+                samples_imag[i] <= 0;
+            end
             uio_oe <= 8'h00;
         end else if (ena) begin
             // Input handling
             if (load_pulse && !processing && !done) begin
-                samples_real[sample_counter] <= uio_in[7:4] << 4; // Real part (upper nibble)
-                samples_imag[sample_counter] <= uio_in[3:0] << 4; // Imag part (lower nibble)
+                samples_real[sample_counter] <= $signed(uio_in[7:4]) << 4; // Real part (upper nibble)
+                samples_imag[sample_counter] <= $signed(uio_in[3:0]) << 4; // Imag part (lower nibble)
                 
                 if (sample_counter == 3) begin
                     processing <= 1;
@@ -93,16 +98,13 @@ module tt_um_FFT_engine (
                 fft_imag[3] <= samples_imag[1] - samples_imag[3];
                 
                 // Stage 2: Final butterflies with twiddle factors
-                // X0 = f0 + f2 (already done)
-                // X1 = f1 + W1*f3
-                fft_real[1] <= fft_real[1] + (fft_imag[3] * W1_imag >> 7);
-                fft_imag[1] <= fft_imag[1] - (fft_real[3] * W1_imag >> 7);
-                // X2 = f0 - f2
-                fft_real[2] <= fft_real[0] - fft_real[2];
-                fft_imag[2] <= fft_imag[0] - fft_imag[2];
-                // X3 = f1 - W1*f3
-                fft_real[3] <= fft_real[1] - (fft_imag[3] * W1_imag >> 7);
-                fft_imag[3] <= fft_imag[1] + (fft_real[3] * W1_imag >> 7);
+                product_real = (fft_real[3] * W1_real) - (fft_imag[3] * W1_imag);
+                product_imag = (fft_real[3] * W1_imag) + (fft_imag[3] * W1_real);
+                
+                fft_real[1] <= fft_real[1] + (product_real >>> 7);
+                fft_imag[1] <= fft_imag[1] + (product_imag >>> 7);
+                fft_real[3] <= fft_real[1] - (product_real >>> 7);
+                fft_imag[3] <= fft_imag[1] - (product_imag >>> 7);
                 
                 processing <= 0;
                 done <= 1;
