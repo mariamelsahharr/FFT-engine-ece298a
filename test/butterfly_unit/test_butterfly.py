@@ -47,10 +47,10 @@ def butterfly(A, B, T):
     b_r, b_i = extract(B)
     t_r, t_i = extract(T)
 
-    if T == 0x8000:  # -1 + 0j
+    if T == 0xFF00:  # -1 + 0j
         wb_r = -b_r
         wb_i = -b_i
-    elif T == 0x0080:  # 0 - j
+    elif T == 0x00FF:  # 0 - j
         wb_r = b_i
         wb_i = -b_r
     else:
@@ -63,40 +63,40 @@ def butterfly(A, B, T):
 
 @cocotb.test()
 async def test_neg1_twiddle(dut):
-    """Test with T = 0x8000 (-1)"""
+    """Test with T = 0xFF00 (-1)"""
     dut.A.value = pack_complex(10, 20)
     dut.B.value = pack_complex(5, 15)
-    dut.T.value = 0x8000
+    dut.T.value = 0xFF00
     await Timer(1, units='ns')
     pos_val = int(dut.Pos.value)
     neg_val = int(dut.Neg.value)
-    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0x8000)
-    print(f"T=0x8000: A=(10,20), B=(5,15)")
+    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0xFF00)
+    print(f"T=0xFF00: A=(10,20), B=(5,15)")
     print(f"  DUT Pos={hex(pos_val)} {unpack_complex(pos_val)}, Neg={hex(neg_val)} {unpack_complex(neg_val)}")
     print(f"  REF Pos={hex(expected_pos)} {unpack_complex(expected_pos)}, Neg={hex(expected_neg)} {unpack_complex(expected_neg)}")
-    assert pos_val == expected_neg, f"T=0x8000 Pos mismatch: got {hex(pos_val)}, expected {hex(expected_neg)}"
-    assert neg_val == expected_pos, f"T=0x8000 Neg mismatch: got {hex(neg_val)}, expected {hex(expected_pos)}"
+    assert pos_val == expected_pos, f"T=0xFF00 Pos mismatch: got {hex(pos_val)}, expected {hex(expected_pos)}"
+    assert neg_val == expected_neg, f"T=0xFF00 Neg mismatch: got {hex(neg_val)}, expected {hex(expected_neg)}"
 
 @cocotb.test()
 async def test_negj_twiddle(dut):
-    """Test with T = 0x0080 (-j)"""
+    """Test with T = 0x00FF (-j)"""
     dut.A.value = pack_complex(10, 20)
     dut.B.value = pack_complex(5, 15)
-    dut.T.value = 0x0080
+    dut.T.value = 0x00FF
     await Timer(1, units='ns')
     pos_val = int(dut.Pos.value)
     neg_val = int(dut.Neg.value)
-    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0x0080)
-    print(f"T=0x0080: A=(10,20), B=(5,15)")
+    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0x00FF)
+    print(f"T=0x00FF: A=(10,20), B=(5,15)")
     print(f"  DUT Pos={hex(pos_val)} {unpack_complex(pos_val)}, Neg={hex(neg_val)} {unpack_complex(neg_val)}")
     print(f"  REF Pos={hex(expected_pos)} {unpack_complex(expected_pos)}, Neg={hex(expected_neg)} {unpack_complex(expected_neg)}")
-    assert pos_val == expected_neg, f"T=0x0080 Pos mismatch: got {hex(pos_val)}, expected {hex(expected_neg)}"
-    assert neg_val == expected_pos, f"T=0x0080 Neg mismatch: got {hex(neg_val)}, expected {hex(expected_pos)}"
+    assert pos_val == expected_pos, f"T=0x00FF Pos mismatch: got {hex(pos_val)}, expected {hex(expected_pos)}"
+    assert neg_val == expected_neg, f"T=0x00FF Neg mismatch: got {hex(neg_val)}, expected {hex(expected_neg)}"
 
 @cocotb.test()
 async def test_random_supported_twiddles(dut):
     """Randomized test with only supported twiddle factors (-1, -j)"""
-    twiddle_factors = [0x8000, 0x0080]
+    twiddle_factors = [0xFF00, 0x00FF]
     for i in range(5):
         a_real = random.randint(-128, 127)
         a_imag = random.randint(-128, 127)
@@ -115,37 +115,37 @@ async def test_random_supported_twiddles(dut):
         print(f"[{i+1}] A=({a_real},{a_imag}), B=({b_real},{b_imag}), T={hex(T)}")
         print(f"     DUT Pos={hex(pos_val)} {unpack_complex(pos_val)}, Neg={hex(neg_val)} {unpack_complex(neg_val)}")
         print(f"     REF Pos={hex(expected_pos)} {unpack_complex(expected_pos)}, Neg={hex(expected_neg)} {unpack_complex(expected_neg)}")
-        assert pos_val == expected_neg, f"[{i+1}] Pos mismatch: got {hex(pos_val)}, expected {hex(expected_neg)}"
-        assert neg_val == expected_pos, f"[{i+1}] Neg mismatch: got {hex(neg_val)}, expected {hex(expected_pos)}"
+        assert pos_val == expected_pos, f"[{i+1}] Pos mismatch: got {hex(pos_val)}, expected {hex(expected_pos)}"
+        assert neg_val == expected_neg, f"[{i+1}] Neg mismatch: got {hex(neg_val)}, expected {hex(expected_neg)}"
 
 @cocotb.test()
 async def test_basic_butterfly(dut):
-    """Basic butterfly test with T = 0x8000 (-1) -> Plus=A-B, Minus=A+B"""
+    """Basic butterfly test with T = 0xFF00 (-1) -> Plus=A-B, Minus=A+B"""
     dut.A.value = pack_complex(1, 1)
     dut.B.value = pack_complex(2, 2)
-    dut.T.value = 0x8000  # -1
+    dut.T.value = 0xFF00  # -1
     await Timer(1, units='ns')
     pos_val = int(dut.Pos.value)
     neg_val = int(dut.Neg.value)
-    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0x8000)
-    print(f"Basic: A=(1,1), B=(2,2), T=0x8000 (-1)")
+    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0xFF00)
+    print(f"Basic: A=(1,1), B=(2,2), T=0xFF00 (-1)")
     print(f"  DUT Pos={hex(pos_val)} {unpack_complex(pos_val)}, Neg={hex(neg_val)} {unpack_complex(neg_val)}")
     print(f"  REF Pos={hex(expected_pos)} {unpack_complex(expected_pos)}, Neg={hex(expected_neg)} {unpack_complex(expected_neg)}")
-    assert pos_val == expected_neg, f"Basic Pos mismatch: got {hex(pos_val)}, expected {hex(expected_neg)}"
-    assert neg_val == expected_pos, f"Basic Neg mismatch: got {hex(neg_val)}, expected {hex(expected_pos)}"
+    assert pos_val == expected_pos, f"Basic Pos mismatch: got {hex(pos_val)}, expected {hex(expected_pos)}"
+    assert neg_val == expected_neg, f"Basic Neg mismatch: got {hex(neg_val)}, expected {hex(expected_neg)}"
 
 @cocotb.test()
 async def test_simple_multiply(dut):
-    """Simple multiply test with T = 0x0080 (-j) -> complex multiplication"""
+    """Simple multiply test with T = 0x00FF (-j) -> complex multiplication"""
     dut.A.value = pack_complex(0, 0)
     dut.B.value = pack_complex(2, 0)
-    dut.T.value = 0x0080  # -j
+    dut.T.value = 0x00FF  # -j
     await Timer(1, units='ns')
     pos_val = int(dut.Pos.value)
     neg_val = int(dut.Neg.value)
-    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0x0080)
-    print(f"Simple: A=(0,0), B=(2,0), T=0x0080 (-j)")
+    expected_pos, expected_neg = butterfly(int(dut.A.value), int(dut.B.value), 0x00FF)
+    print(f"Simple: A=(0,0), B=(2,0), T=0x00FF (-j)")
     print(f"  DUT Pos={hex(pos_val)} {unpack_complex(pos_val)}, Neg={hex(neg_val)} {unpack_complex(neg_val)}")
     print(f"  REF Pos={hex(expected_pos)} {unpack_complex(expected_pos)}, Neg={hex(expected_neg)} {unpack_complex(expected_neg)}")
-    assert pos_val == expected_neg, f"Simple Pos mismatch: got {hex(pos_val)}, expected {hex(expected_neg)}"
-    assert neg_val == expected_pos, f"Simple Neg mismatch: got {hex(neg_val)}, expected {hex(expected_pos)}"
+    assert pos_val == expected_pos, f"Simple Pos mismatch: got {hex(pos_val)}, expected {hex(expected_pos)}"
+    assert neg_val == expected_neg, f"Simple Neg mismatch: got {hex(neg_val)}, expected {hex(expected_neg)}"
