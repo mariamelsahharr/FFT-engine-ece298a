@@ -23,6 +23,10 @@ module fft_engine #(
     logic signed [WIDTH-1:0] s1_real[0:3];
     logic signed [WIDTH-1:0] s1_imag[0:3];
     
+    // Stage 2 butterfly outputs
+    logic signed [WIDTH-1:0] bfly_pos_real, bfly_pos_imag;
+    logic signed [WIDTH-1:0] bfly_neg_real, bfly_neg_imag;
+    
     // Instantiate butterfly units for stage 1
     butterfly bfly_stage1_0 (
         .A_real(in0_real), .A_imag(in0_imag),
@@ -40,6 +44,15 @@ module fft_engine #(
         .Neg_real(s1_real[3]), .Neg_imag(s1_imag[3])
     );
     
+    // Instantiate butterfly for stage 2
+    butterfly bfly_stage2_1 (
+        .A_real(s1_real[1]), .A_imag(s1_imag[1]),
+        .B_real(s1_real[3]), .B_imag(s1_imag[3]),
+        .W_real(W1_real), .W_imag(W1_imag),
+        .Pos_real(bfly_pos_real), .Pos_imag(bfly_pos_imag),
+        .Neg_real(bfly_neg_real), .Neg_imag(bfly_neg_imag)
+    );
+    
     // Stage 2 processing
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -54,19 +67,7 @@ module fft_engine #(
             out2_real <= s1_real[0] - s1_real[2];
             out2_imag <= s1_imag[0] - s1_imag[2];
             
-            // Second butterfly (with twiddle factor)
-            // Create temporary variables for butterfly outputs
-            logic signed [WIDTH-1:0] bfly_pos_real, bfly_pos_imag;
-            logic signed [WIDTH-1:0] bfly_neg_real, bfly_neg_imag;
-            
-            butterfly bfly_stage2_1 (
-                .A_real(s1_real[1]), .A_imag(s1_imag[1]),
-                .B_real(s1_real[3]), .B_imag(s1_imag[3]),
-                .W_real(W1_real), .W_imag(W1_imag),
-                .Pos_real(bfly_pos_real), .Pos_imag(bfly_pos_imag),
-                .Neg_real(bfly_neg_real), .Neg_imag(bfly_neg_imag)
-            );
-            
+            // Second butterfly outputs
             out1_real <= bfly_pos_real;
             out1_imag <= bfly_pos_imag;
             out3_real <= bfly_neg_real;
