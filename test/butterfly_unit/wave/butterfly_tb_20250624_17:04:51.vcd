@@ -1,0 +1,123 @@
+$date
+	Tue Jun 24 17:04:53 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module butterfly_tb $end
+$var wire 16 ! A [15:0] $end
+$var wire 16 " B [15:0] $end
+$var wire 16 # T [15:0] $end
+$var wire 16 $ Pos [15:0] $end
+$var wire 16 % Neg [15:0] $end
+$scope module dut $end
+$var wire 16 & A [15:0] $end
+$var wire 16 ' B [15:0] $end
+$var wire 16 ( T [15:0] $end
+$var wire 8 ) w_real [7:0] $end
+$var wire 8 * w_imag [7:0] $end
+$var wire 8 + product_real_trunc [7:0] $end
+$var wire 16 , product_real [15:0] $end
+$var wire 8 - product_imag_trunc [7:0] $end
+$var wire 16 . product_imag [15:0] $end
+$var wire 8 / b_real [7:0] $end
+$var wire 8 0 b_imag [7:0] $end
+$var wire 16 1 Pos [15:0] $end
+$var wire 16 2 Neg [15:0] $end
+$var parameter 32 3 WIDTH $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b10000 3
+$end
+#0
+$dumpvars
+b11000000110 2
+b111000100010 1
+b1111 0
+b101 /
+b111011110001 .
+b1110 -
+b10011111011 ,
+b100 +
+b0 *
+b11111111 )
+b1111111100000000 (
+b10100001111 '
+b101000010100 &
+b11000000110 %
+b111000100010 $
+b1111111100000000 #
+b10100001111 "
+b101000010100 !
+$end
+#1001
+b11110001 +
+b1111101100011000 $
+b1111101100011000 1
+b1100100010000 %
+b1100100010000 2
+b100 -
+b0 )
+b1111000100001111 ,
+b10011111011 .
+b11111111 *
+b11111111 #
+b11111111 (
+#2002
+b1101111 -
+b1011110 +
+b11111111 )
+b0 *
+b110111110010000 .
+b1011111 /
+b101111010100001 ,
+b1110000 0
+b1101101101100010 $
+b1101101101100010 1
+b1111110000100 %
+b1111110000100 2
+b1111111100000000 #
+b1111111100000000 (
+b101111101110000 "
+b101111101110000 '
+b111110111110011 !
+b111110111110011 &
+#3003
+b1 +
+b1 -
+b111111110 ,
+b10 /
+b111111110 .
+b10 0
+b1000000010 $
+b1000000010 1
+b0 %
+b0 2
+b1000000010 "
+b1000000010 '
+b100000001 !
+b100000001 &
+#4004
+b0 +
+b0 ,
+b0 )
+b11111111 *
+b111111110 .
+b0 0
+b1 $
+b1 1
+b11111111 %
+b11111111 2
+b11111111 #
+b11111111 (
+b1000000000 "
+b1000000000 '
+b0 !
+b0 &
+#5005
