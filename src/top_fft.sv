@@ -1,233 +1,129 @@
-// nano_fft_top.sv (Final Version)
-// This top-level module is designed to control:
-// 1. The provided fft_4point_16bit engine (FSM-based, start/done).
-// 2. A dual-port read memory for faster data loading.
-// 3. A purely combinational butterfly unit (used inside the engine).
-
-module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
-    input  wire [7:0] ui_in,
-    output logic [7:0] uo_out,
-    input  wire [7:0] uio_in,
-    output wire [7:0] uio_out,
-    output logic [7:0] uio_oe,
+module tt_um_FFT_engine (
+    input  wire [7:0] ui_in,    // Control: ui_in[0]=load, ui_in[1]=output
+    output logic [7:0] uo_out,  // 7-segment display
+    input  wire [7:0] uio_in,   // Bidirectional data port (input when loading)
+    output wire [7:0] uio_out,  // Bidirectional data port (output when displaying)
+    output logic [7:0] uio_oe,  // Output enable (all 1s when displaying)
     input  wire       ena,
     input  wire       clk,
     input  wire       rst_n
 );
 
-    // --- Signal Declarations ---
+    // System control signals
     wire rst = ~rst_n;
-
-    // Switch Interface signals
-    wire load_pulse;
-    wire output_pulse;
-
-    // Dual-Port Memory Interface signals
-    logic        mem_en;
-    logic        mem_read_en;
-    logic        mem_write_en;
-    logic  [1:0] mem_addr_w;
-    logic [15:0] mem_data_in;
-    logic  [1:0] mem_addr_a;
-    logic  [1:0] mem_addr_b;
-    wire  [15:0] mem_data_out_a;
-    wire  [15:0] mem_data_out_b;
-    wire         mem_read_valid;
-
-    // --- FFT Engine Interface signals (FULLY FLATTENED) ---
-    logic        fft_start;
-    wire         fft_done;
-    logic [15:0] fft_sample0, fft_sample1, fft_sample2, fft_sample3;
-    // Four separate wires for the frequency outputs
-    wire  [15:0] fft_freq0, fft_freq1, fft_freq2, fft_freq3;
-
-    // --- System FSM States ---
-    localparam [3:0]
-        S_IDLE          = 4'd0,
-        S_LOAD          = 4'd1,
-        S_FFT_READ      = 4'd2, // A single state can read 2x samples
-        S_FFT_START     = 4'd3,
-        S_FFT_WAIT      = 4'd4,
-        S_OUTPUT_WAIT   = 4'd5,
-        S_OUTPUT_DRIVE  = 4'd6;
+    wire load_pulse = ui_in[0];
+    wire output_pulse = ui_in[1];
     
-    logic [3:0] state, next_state;
+    // Sample storage (4 complex 8-bit samples)
+    logic [7:0] samples_real[0:3];
+    logic [7:0] samples_imag[0:3];
     
-    // --- Counters ---
-    logic [1:0] load_counter;
+    // FFT output storage
+    logic [7:0] fft_real[0:3];
+    logic [7:0] fft_imag[0:3];
+    
+    // Control state
+    logic [1:0] sample_counter;
     logic [1:0] output_counter;
-    logic       mem_read_cycle; // A simple 0/1 to track which pair of samples to read
-
-    // --- Module Instantiations ---
-    switch_interface sw_if_load (.clk(clk), .rst(rst), .sw_in(ui_in[0]), .pulse_out(load_pulse));
-    switch_interface sw_if_output (.clk(clk), .rst(rst), .sw_in(ui_in[1]), .pulse_out(output_pulse));
-
-    fft_memory memory (
-        .clk(clk), .rst(rst), .en(mem_en),
-        .read_en(mem_read_en), .write_en(mem_write_en),
-        .addr_w(mem_addr_w), .data_in(mem_data_in),
-        .addr_a(mem_addr_a), .data_out_a(mem_data_out_a),
-        .addr_b(mem_addr_b), .data_out_b(mem_data_out_b),
-        .read_valid(mem_read_valid)
-    );
-
-    // Your specific FSM-based FFT engine
-    fft_4point_16bit fft_core (
-        .clk(clk), .reset(rst),
-        .sample0_in(fft_sample0), .sample1_in(fft_sample1),
-        .sample2_in(fft_sample2), .sample3_in(fft_sample3),
-        .start(fft_start),
-        // Connect to the new flattened output ports
-        .freq0_out(fft_freq0),
-        .freq1_out(fft_freq1),
-        .freq2_out(fft_freq2),
-        .freq3_out(fft_freq3),
-        .done(fft_done)
-    );
-
-    display_controller disp_ctrl ( .fsm_state_in(display_code), .seg_out(uo_out) );
-
-    // --- FSM Sequential Logic (CORRECTED) ---
+    logic processing, done;
+    
+    // Twiddle factors (W4^0 = 1, W4^1 = -j)
+    localparam [7:0] W0_real = 8'h80; // 1.0 fixed-point (Q1.7)
+    localparam [7:0] W0_imag = 8'h00;
+    localparam [7:0] W1_real = 8'h00;
+    localparam [7:0] W1_imag = 8'h80; // -j fixed-point
+    
+    // Display state encoding
+    logic [3:0] display_state;
+    always_comb begin
+        if (processing) display_state = 4'd5; // 'C' for computing
+        else if (done) display_state = 4'd5 + output_counter + 1;
+        else display_state = sample_counter + 1;
+    end
+    
+    // Simple 7-segment display encoder
+    always_comb begin
+        case(display_state)
+            4'd1: uo_out = 8'b00001100; // 1
+            4'd2: uo_out = 8'b01011010; // 2
+            4'd3: uo_out = 8'b01001110; // 3
+            4'd4: uo_out = 8'b01100100; // 4
+            4'd5: uo_out = 8'b00111000; // C
+            4'd6: uo_out = 8'b01101100; // 5
+            4'd7: uo_out = 8'b01111100; // 6
+            4'd8: uo_out = 8'b00001110; // 7
+            default: uo_out = 8'b0;
+        endcase
+    end
+    
+    // Main control FSM
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            state <= S_IDLE;
-            load_counter <= 0;
+            sample_counter <= 0;
             output_counter <= 0;
-            mem_read_cycle <= 0;
-            // Initialize the separate sample registers
-            fft_sample0 <= '0;
-            fft_sample1 <= '0;
-            fft_sample2 <= '0;
-            fft_sample3 <= '0;
+            processing <= 0;
+            done <= 0;
+            samples_real <= '{default:0};
+            samples_imag <= '{default:0};
+            uio_oe <= 8'h00;
         end else if (ena) begin
-            state <= next_state;
-
-            // --- Counter Updates ---
-            if (next_state != state) begin // On a state change...
-                // Reset the read cycle tracker when we start reading
-                if (next_state == S_FFT_READ) mem_read_cycle <= 0;
-            end else begin
-                // Increment counters during their respective states
-                if (state == S_LOAD)         load_counter <= load_counter + 1;
-                if (state == S_FFT_READ)     mem_read_cycle <= mem_read_cycle + 1; // Toggles 0 -> 1
-                if (state == S_OUTPUT_DRIVE) output_counter <= output_counter + 1;
-            end
-            
-            // --- Latch FFT Samples into separate registers ---
-            if (state == S_FFT_READ) begin
-                if (mem_read_cycle == 1'b0) begin // Finished reading first pair
-                    fft_sample0 <= mem_data_out_a; // Latch x0
-                    fft_sample1 <= mem_data_out_b; // Latch x1
-                end else begin // Finished reading second pair
-                    fft_sample2 <= mem_data_out_a; // Latch x2
-                    fft_sample3 <= mem_data_out_b; // Latch x3
+            // Input handling
+            if (load_pulse && !processing && !done) begin
+                samples_real[sample_counter] <= uio_in[7:4] << 4; // Real part (upper nibble)
+                samples_imag[sample_counter] <= uio_in[3:0] << 4; // Imag part (lower nibble)
+                
+                if (sample_counter == 3) begin
+                    processing <= 1;
+                    sample_counter <= 0;
+                end else begin
+                    sample_counter <= sample_counter + 1;
                 end
             end
             
-            // Full loop reset logic
-            if (next_state == S_IDLE && state == S_OUTPUT_WAIT) begin
-                load_counter <= 0;
-                output_counter <= 0;
+            // FFT computation (2-stage pipeline)
+            if (processing) begin
+                // Stage 1: First two butterflies
+                fft_real[0] <= samples_real[0] + samples_real[2];
+                fft_imag[0] <= samples_imag[0] + samples_imag[2];
+                fft_real[1] <= samples_real[0] - samples_real[2];
+                fft_imag[1] <= samples_imag[0] - samples_imag[2];
+                fft_real[2] <= samples_real[1] + samples_real[3];
+                fft_imag[2] <= samples_imag[1] + samples_imag[3];
+                fft_real[3] <= samples_real[1] - samples_real[3];
+                fft_imag[3] <= samples_imag[1] - samples_imag[3];
+                
+                // Stage 2: Final butterflies with twiddle factors
+                // X0 = f0 + f2 (already done)
+                // X1 = f1 + W1*f3
+                fft_real[1] <= fft_real[1] + (fft_imag[3] * W1_imag >> 7);
+                fft_imag[1] <= fft_imag[1] - (fft_real[3] * W1_imag >> 7);
+                // X2 = f0 - f2
+                fft_real[2] <= fft_real[0] - fft_real[2];
+                fft_imag[2] <= fft_imag[0] - fft_imag[2];
+                // X3 = f1 - W1*f3
+                fft_real[3] <= fft_real[1] - (fft_imag[3] * W1_imag >> 7);
+                fft_imag[3] <= fft_imag[1] + (fft_real[3] * W1_imag >> 7);
+                
+                processing <= 0;
+                done <= 1;
+            end
+            
+            // Output handling
+            if (output_pulse && done) begin
+                uio_oe <= 8'hFF; // Enable output drivers
+                if (output_counter == 3) begin
+                    output_counter <= 0;
+                    done <= 0;
+                end else begin
+                    output_counter <= output_counter + 1;
+                end
+            end else begin
+                uio_oe <= 8'h00;
             end
         end
     end
     
-    // --- FSM Combinational Logic ---
-    always_comb begin
-        next_state   = state;
-        uio_oe       = 8'h00;
-        mem_en       = 1'b0;
-        mem_read_en  = 1'b0;
-        mem_write_en = 1'b0;
-        mem_addr_w   = '0;
-        mem_data_in  = '0;
-        mem_addr_a   = '0;
-        mem_addr_b   = '0;
-        fft_start    = 1'b0;
-
-        case (state)
-            S_IDLE: if (load_pulse && load_counter < 2'd3) next_state = S_LOAD;
-                    else if (load_counter == 2'd3) next_state = S_FFT_READ;
-
-            S_LOAD: begin
-                mem_en       = 1'b1;
-                mem_write_en = 1'b1;
-                mem_addr_w   = load_counter;
-                mem_data_in  = {{4{uio_in[7]}}, uio_in[7:4], {4{uio_in[3]}}, uio_in[3:0]};
-                next_state   = S_IDLE;
-            end
-
-            S_FFT_READ: begin
-                // This state now runs for two cycles. In each cycle, we set the read addresses.
-                // The always_ff block above will handle latching the data on the following cycle.
-                mem_en      = 1'b1;
-                mem_read_en = 1'b1;
-                if (mem_read_cycle == 1'b0) begin // First cycle: set addresses for x0 and x1
-                    mem_addr_a = 2'b00;
-                    mem_addr_b = 2'b01;
-                    next_state = S_FFT_READ; // Stay in this state for the next read
-                end else begin // Second cycle: set addresses for x2 and x3
-                    mem_addr_a = 2'b10;
-                    mem_addr_b = 2'b11;
-                    // On the next cycle, the last samples will be latched, and we can start the FFT.
-                    next_state = S_FFT_START;
-                end
-            end
-            
-            S_FFT_START: begin
-                // All samples are now guaranteed to be latched in the fft_samples array. Pulse start.
-                fft_start  = 1'b1;
-                next_state = S_FFT_WAIT;
-            end
-
-            // The rest of the FSM states (S_FFT_WAIT, S_OUTPUT_WAIT, S_OUTPUT_DRIVE)
-            // are exactly the same as the previous correct version.
-            S_FFT_WAIT: begin
-                if (fft_done) next_state = S_OUTPUT_WAIT;
-                else next_state = S_FFT_WAIT;
-            end
-
-            S_OUTPUT_WAIT: if (output_pulse && output_counter < 2'd3) next_state = S_OUTPUT_DRIVE;
-                           else if (output_counter == 2'd3) next_state = S_IDLE;
-
-            S_OUTPUT_DRIVE: begin
-                uio_oe       = 8'hFF;
-                mem_en       = 1'b1;
-                mem_read_en  = 1'b1;
-                mem_addr_a   = output_counter;
-                next_state   = S_OUTPUT_WAIT;
-            end
-
-            default: next_state = S_IDLE;
-        endcase
-    end
+    // Output multiplexer
+    assign uio_out = {fft_real[output_counter][7:4], fft_imag[output_counter][7:4]};
     
-    // --- Display and Output Logic ---
-    logic [3:0] display_code;
-    always_comb begin
-        case (state)
-            S_IDLE, S_LOAD:
-                display_code = load_counter + 3'd1;
-            S_FFT_READ, S_FFT_START, S_FFT_WAIT:
-                display_code = 9; // Code for 'C'
-            S_OUTPUT_WAIT, S_OUTPUT_DRIVE:
-                display_code = output_counter + 3'd5;
-            default:
-                display_code = 0;
-        endcase
-    end
-    
-    // Output directly from the FFT engine's registered output
-   always_comb begin
-        case (output_counter)
-            2'b00: uio_out = {fft_freq0[15:12], fft_freq0[7:4]};
-            2'b01: uio_out = {fft_freq1[15:12], fft_freq1[7:4]};
-            2'b10: uio_out = {fft_freq2[15:12], fft_freq2[7:4]};
-            2'b11: uio_out = {fft_freq3[15:12], fft_freq3[7:4]};
-            default: uio_out = 8'h00;
-        endcase
-    end
-
-    wire _unused = &{ui_in[7:2], mem_read_valid, fft_freq0[11:8], fft_freq0[3:0], fft_freq1[11:8], fft_freq1[3:0], fft_freq2[11:8], fft_freq2[3:0], fft_freq3[11:8], fft_freq3[3:0]};
-
 endmodule
