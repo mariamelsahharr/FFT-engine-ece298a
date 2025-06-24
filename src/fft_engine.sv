@@ -6,111 +6,109 @@ module fft_4point_16bit (
     input      [15:0] sample2_in,
     input      [15:0] sample3_in,
     input             start,
+    // Flattened output ports
     output logic [15:0] freq0_out,
     output logic [15:0] freq1_out,
     output logic [15:0] freq2_out,
     output logic [15:0] freq3_out,
     output logic      done
 );
+    wire [15:0] W_0_2 = 16'b1000000000000000;
+    wire [15:0] W_0_4 = 16'b1000000000000000;
+    wire [15:0] W_1_4 = 16'b0000000010000000;
 
-    // Twiddle factors
-    wire [15:0] W_0_2 = 16'b1000000000000000; // 1
-    wire [15:0] W_0_4 = 16'b1000000000000000; // 1
-    wire [15:0] W_1_4 = 16'b0000000010000000; // j (for example, placeholder)
+    reg [15:0] b1_A;
+    reg [15:0] b1_B;
+    reg [15:0] b1_W;
+    reg [15:0] b1_plus;
+    reg [15:0] b1_minus;
 
-    // Butterfly instance
-    reg  [15:0] b_A, b_B, b_W;
-    wire [15:0] b_plus, b_minus;
-    butterfly #(16) b1(b_A, b_B, b_W, b_plus, b_minus);
+    reg [15:0] b2_A;
+    reg [15:0] b2_B;
+    reg [15:0] b2_W;
+    reg [15:0] b2_plus;
+    reg [15:0] b2_minus;
 
-    // State machine
-    typedef enum logic [2:0] {
-        RESET    = 3'd0,
-        LOAD     = 3'd1,
-        STAGE1_0 = 3'd2,
-        STAGE1_1 = 3'd3,
-        STAGE2_0 = 3'd4,
-        STAGE2_1 = 3'd5,
-        STAGE2_2 = 3'd6,
-        DONE     = 3'd7
-    } state_t;
+    reg [1:0] current_stage = RESET;
+    reg [1:0] current_stage_d;
 
-    state_t state, next_state;
+    parameter RESET   = 2'b00;
+    parameter STAGE_1 = 2'b01;
+    parameter STAGE_2 = 2'b10;
+    parameter DONE    = 2'b11;
 
-    // Registers for intermediate values
-    reg [15:0] X0, X1, X2, X3;
-    reg [15:0] Y0, Y1, Y2, Y3;
+    butterfly #(16) b1(b1_A, b1_B, b1_W, b1_plus, b1_minus);
+    butterfly #(16) b2(b2_A, b2_B, b2_W, b2_plus, b2_minus);
 
-    always_ff @(posedge clk or posedge reset) begin
-        if (reset) begin
-            state      <= RESET;
-            done       <= 0;
-            freq0_out  <= 0;
-            freq1_out  <= 0;
-            freq2_out  <= 0;
-            freq3_out  <= 0;
+    
+
+    always @(posedge clk) begin
+
+        if (reset) begin // Add reset for outputs here
+            freq0_out <= '0;
+            freq1_out <= '0;
+            freq2_out <= '0;
+            freq3_out <= '0;
+            done      <= 1'b0;
+            current_stage <= RESET;
         end else begin
-            state <= next_state;
+            current_stage <= current_stage_d;
+            
+            case (current_stage)
+                RESET: begin
+                    // No need to reset freqs here anymore, done in main reset
+                    done <= 1'b0; // Ensure done is low when not in DONE state
+                end
+                STAGE_1: begin
+                // assign values
+                // run first butterfly units
+                // bA - X0, bB - X2, fA - X1, fB - X3
+                b1_A <= sample0_in;
+                b1_B <= sample2_in;
+                b2_A <= sample1_in;
+                b2_B <= sample3_in;
+                b1_W <= W_0_2;
+                b2_W <= W_0_2;
 
-            case (state)
-                LOAD: begin
-                    X0 <= sample0_in;
-                    X1 <= sample1_in;
-                    X2 <= sample2_in;
-                    X3 <= sample3_in;
-                    done <= 0;
-                end
-
-                STAGE1_0: begin
-                    b_A <= X0;
-                    b_B <= X2;
-                    b_W <= W_0_2;
-                end
-                STAGE1_1: begin
-                    Y0 <= b_plus;
-                    Y2 <= b_minus;
-                    b_A <= X1;
-                    b_B <= X3;
-                    b_W <= W_0_2;
-                end
-                STAGE2_0: begin
-                    Y1 <= b_plus;
-                    Y3 <= b_minus;
-                    b_A <= Y0;
-                    b_B <= Y1;
-                    b_W <= W_0_4;
-                end
-                STAGE2_1: begin
-                    freq0_out <= b_plus;
-                    freq2_out <= b_minus;
-                    b_A <= Y2;
-                    b_B <= Y3;
-                    b_W <= W_1_4;
-                end
-                STAGE2_2: begin
-                    freq1_out <= b_plus;
-                    freq3_out <= b_minus;
-                end
-
+            end
+            STAGE_2: begin
+                // reassign values
+                // run second butterfly units
+                b1_A <= b1_plus;
+                b1_B <= b2_plus;
+                b2_A <= b1_minus;
+                b2_B <= b2_minus;
+                b1_W <= W_0_4;
+                b2_W <= W_1_4;
+            end
                 DONE: begin
-                    done <= 1;
+                    // Assign to the new flattened outputs
+                    freq0_out <= b1_plus;
+                    freq1_out <= b2_plus;
+                    freq2_out <= b1_minus;
+                    freq3_out <= b2_minus;
+                    done      <= 1'b1;
                 end
             endcase
         end
-    end
 
-    // Next state logic
+    end
     always_comb begin
-        case (state)
-            RESET:      next_state = start ? LOAD : RESET;
-            LOAD:       next_state = STAGE1_0;
-            STAGE1_0:   next_state = STAGE1_1;
-            STAGE1_1:   next_state = STAGE2_0;
-            STAGE2_0:   next_state = STAGE2_1;
-            STAGE2_1:   next_state = STAGE2_2;
-            STAGE2_2:   next_state = DONE;
-            DONE:       next_state = start ? DONE : RESET;
-            default:    next_state = RESET;
+        case(current_stage)
+            RESET: begin
+                if (start) current_stage_d = STAGE_1;
+                else current_stage_d = RESET;
+            end
+            STAGE_1: begin
+                current_stage_d = STAGE_2;
+            end
+            STAGE_2: begin
+                current_stage_d = DONE;
+            end
+            DONE: begin
+                if (!start) current_stage_d = RESET;
+                else current_stage_d = DONE;
+            end
         endcase
     end
 
