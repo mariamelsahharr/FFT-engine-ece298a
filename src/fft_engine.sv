@@ -37,8 +37,8 @@ module fft_4point_16bit (
     parameter STAGE_2 = 2'b10;
     parameter DONE    = 2'b11;
 
-    butterfly #(16) b1(b1_A, b1_B, b1_W, b1_plus, b1_minus);
-    butterfly #(16) b2(b2_A, b2_B, b2_W, b2_plus, b2_minus);
+    butterfly_unit #(16) b1(b1_A, b1_B, b1_W, b1_plus, b1_minus);
+    butterfly_unit #(16) b2(b2_A, b2_B, b2_W, b2_plus, b2_minus);
 
     
 

@@ -1,54 +1,43 @@
-module butterfly_unit #(parameter WIDTH = 8) (
-    input  logic        clk,
-    input  logic        rst,
-    input  logic        en,
-    input  logic signed [WIDTH-1:0] A,
-    input  logic signed [WIDTH-1:0] B,
-    input  logic signed [WIDTH-1:0] T,
-    output logic signed [WIDTH-1:0] Pos,
-    output logic signed [WIDTH-1:0] Neg,
-    output logic        valid
+module butterfly #( WIDTH = 32 ) (
+    input signed  [ WIDTH - 1 : 0 ] A,
+    input signed  [ WIDTH - 1 : 0 ] B,
+    input signed  [ WIDTH - 1 : 0 ] W,
+    output signed [ WIDTH - 1 : 0 ] plus, // A + W*B
+    output signed [ WIDTH - 1 : 0 ] minus // A - W*B
 );
+// For WIDTH=32, each port will be 32 bits wide. 
+// The top 16 bits will represent the real portion, and the bottom 16 the imaginary portion.
 
-    localparam HALF_WIDTH = WIDTH / 2;
-
-    // Unpack inputs 
-    wire [HALF_WIDTH-1:0] a_real = A[WIDTH-1:HALF_WIDTH];
-    wire [HALF_WIDTH-1:0] a_imag = A[HALF_WIDTH-1:0];
-    wire [HALF_WIDTH-1:0] b_real = B[WIDTH-1:HALF_WIDTH];
-    wire [HALF_WIDTH-1:0] b_imag = B[HALF_WIDTH-1:0];
-    wire [HALF_WIDTH-1:0] t_real = T[WIDTH-1:HALF_WIDTH];
-    wire [HALF_WIDTH-1:0] t_imag = T[HALF_WIDTH-1:0];
-
-    // Complex multiplication 
-    wire [WIDTH-1:0] product_real = (t_real * b_real) - (t_imag * b_imag);
-    wire [WIDTH-1:0] product_imag = (t_imag * b_real) + (t_real * b_imag);
+    wire [ WIDTH/2 - 1 : 0 ] w_real;
+    wire [ WIDTH/2 - 1 : 0 ] w_imag;
+    wire [ WIDTH/2 - 1 : 0 ] b_real;
+    wire [ WIDTH/2 - 1 : 0 ] b_imag;
     
-    // Truncation 
-    wire [HALF_WIDTH-1:0] product_real_trunc = product_real[WIDTH-1 : WIDTH-1-HALF_WIDTH];
-    wire [HALF_WIDTH-1:0] product_imag_trunc = product_imag[WIDTH-1 : WIDTH-1-HALF_WIDTH];
+    assign w_real = W[ WIDTH - 1   : WIDTH/2 ] ;
+    assign w_imag = W[ WIDTH/2 - 1 : 0 ];
+    assign b_real = B[ WIDTH - 1   : WIDTH/2 ];
+    assign b_imag = B[ WIDTH/2 - 1 : 0 ];
+    
+    wire [ WIDTH - 1 : 0 ] product;
 
-    // Combinational results 
-    wire [WIDTH-1:0] pos_comb = { a_real + product_real_trunc, a_imag + product_imag_trunc };
-    wire [WIDTH-1:0] neg_comb = { a_real - product_real_trunc, a_imag - product_imag_trunc };
+    wire [ WIDTH - 1 : 0 ] product_real;
+    wire [ WIDTH - 1 : 0 ] product_imag;
+    
+    wire [ WIDTH/2 - 1 : 0] product_real_trunc;
+    wire [ WIDTH/2 - 1 : 0] product_imag_trunc;
 
-    // Combinational output
-    assign Pos = pos_comb;
-    assign Neg = neg_comb;
+    assign product_real = (w_real * b_real) - (w_imag * b_imag);
+    assign product_imag = (w_imag * b_real) + (w_real * b_imag);
 
-    /* Sequential output stage - only update when enabled
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            Pos   <= '0;
-            Neg   <= '0;
-            valid <= 1'b0;
-        end else if (en) begin
-            Pos   <= pos_comb;
-            Neg   <= neg_comb;
-            valid <= 1'b1;
-        end else begin
-            valid <= 1'b0;
-        end
-    end */
+    assign product_real_trunc = product_real[ WIDTH - 1 : WIDTH - 1 - WIDTH/2 ];
+    assign product_imag_trunc = product_imag[ WIDTH - 1 : WIDTH - 1 - WIDTH/2 ];
 
-endmodule 
+    assign plus  = {
+        A[ WIDTH - 1 : WIDTH/2 ] + product_real_trunc,
+        A[ WIDTH/2 - 1 : 0] + product_imag_trunc
+    };
+    assign minus = {
+        A[ WIDTH - 1 : WIDTH/2 ] - product_real_trunc,
+        A[ WIDTH/2 - 1 : 0] - product_imag_trunc
+    };
+endmodule
