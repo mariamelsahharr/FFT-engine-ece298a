@@ -15,7 +15,19 @@ module tt_um_FFT_engine (
     wire load_pulse, output_pulse;
     wire [1:0] addr;
     
-    // Data paths
+    // Data paths - now unpacked arrays
+    logic signed [7:0] sample0_real, sample0_imag;
+    logic signed [7:0] sample1_real, sample1_imag;
+    logic signed [7:0] sample2_real, sample2_imag;
+    logic signed [7:0] sample3_real, sample3_imag;
+    
+    // FFT outputs
+    logic signed [7:0] fft0_real, fft0_imag;
+    logic signed [7:0] fft1_real, fft1_imag;
+    logic signed [7:0] fft2_real, fft2_imag;
+    logic signed [7:0] fft3_real, fft3_imag;
+    
+    // Packed arrays for module connections
     logic signed [7:0] samples_real[0:3];
     logic signed [7:0] samples_imag[0:3];
     logic signed [7:0] fft_real[0:3];
@@ -39,17 +51,29 @@ module tt_um_FFT_engine (
         .load_pulse(load_pulse),
         .addr(addr),
         .data_in(uio_in),
-        .real_out(samples_real),
-        .imag_out(samples_imag)
+        .real0_out(sample0_real), .imag0_out(sample0_imag),
+        .real1_out(sample1_real), .imag1_out(sample1_imag),
+        .real2_out(sample2_real), .imag2_out(sample2_imag),
+        .real3_out(sample3_real), .imag3_out(sample3_imag)
     );
+    
+    // Pack samples into arrays for FFT
+    assign samples_real = '{sample0_real, sample1_real, sample2_real, sample3_real};
+    assign samples_imag = '{sample0_imag, sample1_imag, sample2_imag, sample3_imag};
     
     fft_engine fft_inst (
         .clk(clk), .rst(rst),
         .in_real(samples_real),
         .in_imag(samples_imag),
-        .out_real(fft_real),
-        .out_imag(fft_imag)
+        .out0_real(fft0_real), .out0_imag(fft0_imag),
+        .out1_real(fft1_real), .out1_imag(fft1_imag),
+        .out2_real(fft2_real), .out2_imag(fft2_imag),
+        .out3_real(fft3_real), .out3_imag(fft3_imag)
     );
+    
+    // Unpack FFT outputs
+    assign fft_real = '{fft0_real, fft1_real, fft2_real, fft3_real};
+    assign fft_imag = '{fft0_imag, fft1_imag, fft2_imag, fft3_imag};
     
     display_ctrl disp_inst (
         .sample_counter(addr),
