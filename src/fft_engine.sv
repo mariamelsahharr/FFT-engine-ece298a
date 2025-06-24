@@ -4,8 +4,10 @@ module fft_engine #(
     input  logic clk, rst,
     input  logic signed [WIDTH-1:0] in_real[0:3],
     input  logic signed [WIDTH-1:0] in_imag[0:3],
-    output logic signed [WIDTH-1:0] out_real[0:3],
-    output logic signed [WIDTH-1:0] out_imag[0:3]
+    output logic signed [WIDTH-1:0] out0_real, out0_imag,
+    output logic signed [WIDTH-1:0] out1_real, out1_imag,
+    output logic signed [WIDTH-1:0] out2_real, out2_imag,
+    output logic signed [WIDTH-1:0] out3_real, out3_imag
 );
     // Twiddle factors
     localparam logic signed [WIDTH-1:0] W0_real = 8'sh80; // 1.0
