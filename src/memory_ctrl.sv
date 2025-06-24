@@ -14,10 +14,14 @@ module memory_ctrl #(
     logic signed [WIDTH-1:0] real_mem[0:3];
     logic signed [WIDTH-1:0] imag_mem[0:3];
     
+    // Initialize arrays properly
+    integer i;
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            real_mem <= '{default:'0};
-            imag_mem <= '{default:'0};
+            for (i = 0; i < 4; i = i + 1) begin
+                real_mem[i] <= 0;
+                imag_mem[i] <= 0;
+            end
         end else if (ena && load_pulse) begin
             real_mem[addr] <= $signed(data_in[7:4]) << 4;
             imag_mem[addr] <= $signed(data_in[3:0]) << 4;
