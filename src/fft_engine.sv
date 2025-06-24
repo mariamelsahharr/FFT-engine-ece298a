@@ -2,8 +2,12 @@ module fft_engine #(
     parameter WIDTH = 8
 )(
     input  logic clk, rst,
-    input  logic signed [WIDTH-1:0] in_real[0:3],
-    input  logic signed [WIDTH-1:0] in_imag[0:3],
+    // Individual input ports
+    input  logic signed [WIDTH-1:0] in0_real, in0_imag,
+    input  logic signed [WIDTH-1:0] in1_real, in1_imag,
+    input  logic signed [WIDTH-1:0] in2_real, in2_imag,
+    input  logic signed [WIDTH-1:0] in3_real, in3_imag,
+    // Individual output ports
     output logic signed [WIDTH-1:0] out0_real, out0_imag,
     output logic signed [WIDTH-1:0] out1_real, out1_imag,
     output logic signed [WIDTH-1:0] out2_real, out2_imag,
@@ -14,6 +18,27 @@ module fft_engine #(
     localparam logic signed [WIDTH-1:0] W0_imag = 8'sh00;
     localparam logic signed [WIDTH-1:0] W1_real = 8'sh00;  // -j
     localparam logic signed [WIDTH-1:0] W1_imag = 8'sh80;
+    
+    // Create internal arrays from individual ports
+    logic signed [WIDTH-1:0] in_real[0:3];
+    logic signed [WIDTH-1:0] in_imag[0:3];
+    logic signed [WIDTH-1:0] out_real[0:3];
+    logic signed [WIDTH-1:0] out_imag[0:3];
+    
+    always_comb begin
+        in_real = '{in0_real, in1_real, in2_real, in3_real};
+        in_imag = '{in0_imag, in1_imag, in2_imag, in3_imag};
+        
+        // Assign outputs from internal arrays
+        out0_real = out_real[0];
+        out0_imag = out_imag[0];
+        out1_real = out_real[1];
+        out1_imag = out_imag[1];
+        out2_real = out_real[2];
+        out2_imag = out_imag[2];
+        out3_real = out_real[3];
+        out3_imag = out_imag[3];
+    end
     
     // Stage 1 results
     logic signed [WIDTH-1:0] s1_real[0:3], s1_imag[0:3];
@@ -60,3 +85,4 @@ module fft_engine #(
         end
     end
 endmodule
+

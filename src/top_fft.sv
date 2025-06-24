@@ -15,13 +15,13 @@ module tt_um_FFT_engine (
     wire load_pulse, output_pulse;
     wire [1:0] addr;
     
-    // Data paths - individual signals
+    // Individual sample storage
     logic signed [7:0] sample0_real, sample0_imag;
     logic signed [7:0] sample1_real, sample1_imag;
     logic signed [7:0] sample2_real, sample2_imag;
     logic signed [7:0] sample3_real, sample3_imag;
     
-    // FFT outputs - individual signals
+    // Individual FFT outputs
     logic signed [7:0] fft0_real, fft0_imag;
     logic signed [7:0] fft1_real, fft1_imag;
     logic signed [7:0] fft2_real, fft2_imag;
@@ -51,25 +51,13 @@ module tt_um_FFT_engine (
         .real3_out(sample3_real), .imag3_out(sample3_imag)
     );
     
-    // Create packed arrays for FFT input
-    logic signed [7:0] fft_in_real [0:3];
-    logic signed [7:0] fft_in_imag [0:3];
-    
-    always_comb begin
-        fft_in_real[0] = sample0_real;
-        fft_in_real[1] = sample1_real;
-        fft_in_real[2] = sample2_real;
-        fft_in_real[3] = sample3_real;
-        fft_in_imag[0] = sample0_imag;
-        fft_in_imag[1] = sample1_imag;
-        fft_in_imag[2] = sample2_imag;
-        fft_in_imag[3] = sample3_imag;
-    end
-    
+    // Connect FFT engine using individual signals
     fft_engine fft_inst (
         .clk(clk), .rst(rst),
-        .in_real(fft_in_real),
-        .in_imag(fft_in_imag),
+        .in0_real(sample0_real), .in0_imag(sample0_imag),
+        .in1_real(sample1_real), .in1_imag(sample1_imag),
+        .in2_real(sample2_real), .in2_imag(sample2_imag),
+        .in3_real(sample3_real), .in3_imag(sample3_imag),
         .out0_real(fft0_real), .out0_imag(fft0_imag),
         .out1_real(fft1_real), .out1_imag(fft1_imag),
         .out2_real(fft2_real), .out2_imag(fft2_imag),
@@ -91,47 +79,33 @@ module tt_um_FFT_engine (
             output_counter <= '0;
             uio_oe <= '0;
         end else if (ena) begin
-            // Set processing flag when last sample loaded
             if (load_pulse && addr == 2'd3) 
                 processing <= '1;
             else if (processing) 
                 processing <= '0;
             
-            // Set done flag when processing completes
             if (addr == 2'd3 && !processing)
                 done <= '1;
             else if (output_counter == 2'd3)
                 done <= '0;
             
-            // Handle output counter
             if (output_pulse && done) begin
                 uio_oe <= '1;
-                if (output_counter == 2'd3)
-                    output_counter <= '0;
-                else
-                    output_counter <= output_counter + 1;
+                output_counter <= (output_counter == 2'd3) ? '0 : output_counter + 1;
             end else begin
                 uio_oe <= '0;
             end
         end
     end
     
-    // Create packed array for output selection
-    logic signed [7:0] fft_out_real [0:3];
-    logic signed [7:0] fft_out_imag [0:3];
-    
+    // Output selection using a case statement
     always_comb begin
-        fft_out_real[0] = fft0_real;
-        fft_out_real[1] = fft1_real;
-        fft_out_real[2] = fft2_real;
-        fft_out_real[3] = fft3_real;
-        fft_out_imag[0] = fft0_imag;
-        fft_out_imag[1] = fft1_imag;
-        fft_out_imag[2] = fft2_imag;
-        fft_out_imag[3] = fft3_imag;
+        case(output_counter)
+            2'd0: uio_out = {fft0_real[7:4], fft0_imag[7:4]};
+            2'd1: uio_out = {fft1_real[7:4], fft1_imag[7:4]};
+            2'd2: uio_out = {fft2_real[7:4], fft2_imag[7:4]};
+            2'd3: uio_out = {fft3_real[7:4], fft3_imag[7:4]};
+            default: uio_out = 8'h00;
+        endcase
     end
-    
-    // Output multiplexer
-    assign uio_out = {fft_out_real[output_counter][7:4], 
-                     fft_out_imag[output_counter][7:4]};
 endmodule
