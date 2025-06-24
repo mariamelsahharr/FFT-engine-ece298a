@@ -1,131 +1,97 @@
 module tt_um_FFT_engine (
-    input  wire [7:0] ui_in,    // Control: ui_in[0]=load, ui_in[1]=output
-    output logic [7:0] uo_out,  // 7-segment display
-    input  wire [7:0] uio_in,   // Bidirectional data port (input when loading)
-    output wire [7:0] uio_out,  // Bidirectional data port (output when displaying)
-    output logic [7:0] uio_oe,  // Output enable (all 1s when displaying)
+    input  wire [7:0] ui_in,
+    output logic [7:0] uo_out,
+    input  wire [7:0] uio_in,
+    output wire [7:0] uio_out,
+    output logic [7:0] uio_oe,
     input  wire       ena,
     input  wire       clk,
     input  wire       rst_n
 );
-
-    // System control signals
+    // System signals
     wire rst = ~rst_n;
-    wire load_pulse = ui_in[0];
-    wire output_pulse = ui_in[1];
     
-    // Sample storage (4 complex 8-bit samples)
+    // Control signals
+    wire load_pulse, output_pulse;
+    wire [1:0] addr;
+    
+    // Data paths
     logic signed [7:0] samples_real[0:3];
     logic signed [7:0] samples_imag[0:3];
-    
-    // FFT output storage
     logic signed [7:0] fft_real[0:3];
     logic signed [7:0] fft_imag[0:3];
     
-    // Control state
-    logic [1:0] sample_counter;
-    logic [1:0] output_counter;
+    // State tracking
     logic processing, done;
+    logic [1:0] output_counter;
     
-    // Twiddle factors (W4^0 = 1, W4^1 = -j)
-    localparam logic signed [7:0] W0_real = 8'sh80; // 1.0 fixed-point (Q1.7)
-    localparam logic signed [7:0] W0_imag = 8'sh00;
-    localparam logic signed [7:0] W1_real = 8'sh00;
-    localparam logic signed [7:0] W1_imag = 8'sh80; // -j fixed-point
+    // Module instantiations
+    io_ctrl io_inst (
+        .clk(clk), .rst(rst), .ena(ena),
+        .ui_in0(ui_in[0]), .ui_in1(ui_in[1]),
+        .load_pulse(load_pulse),
+        .output_pulse(output_pulse),
+        .addr(addr)
+    );
     
-    // Intermediate products
-    logic signed [15:0] product_real, product_imag;
+    memory_ctrl mem_inst (
+        .clk(clk), .rst(rst), .ena(ena),
+        .load_pulse(load_pulse),
+        .addr(addr),
+        .data_in(uio_in),
+        .real_out(samples_real),
+        .imag_out(samples_imag)
+    );
     
-    // Display state encoding
-    logic [3:0] display_state;
-    always_comb begin
-        if (processing) display_state = 4'd5; // 'C' for computing
-        else if (done) display_state = 4'd5 + output_counter + 1;
-        else display_state = sample_counter + 1;
-    end
+    fft_engine fft_inst (
+        .clk(clk), .rst(rst),
+        .in_real(samples_real),
+        .in_imag(samples_imag),
+        .out_real(fft_real),
+        .out_imag(fft_imag)
+    );
     
-    // Simple 7-segment display encoder
-    always_comb begin
-        case(display_state)
-            4'd1: uo_out = 8'b00001100; // 1
-            4'd2: uo_out = 8'b01011010; // 2
-            4'd3: uo_out = 8'b01001110; // 3
-            4'd4: uo_out = 8'b01100100; // 4
-            4'd5: uo_out = 8'b00111000; // C
-            4'd6: uo_out = 8'b01101100; // 5
-            4'd7: uo_out = 8'b01111100; // 6
-            4'd8: uo_out = 8'b00001110; // 7
-            default: uo_out = 8'b0;
-        endcase
-    end
+    display_ctrl disp_inst (
+        .sample_counter(addr),
+        .output_counter(output_counter),
+        .processing(processing), .done(done),
+        .seg_out(uo_out)
+    );
     
-    // Main control FSM
+    // Output control
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            sample_counter <= 0;
-            output_counter <= 0;
-            processing <= 0;
-            done <= 0;
-            for (int i = 0; i < 4; i++) begin
-                samples_real[i] <= 0;
-                samples_imag[i] <= 0;
-            end
-            uio_oe <= 8'h00;
+            processing <= '0;
+            done <= '0;
+            output_counter <= '0;
+            uio_oe <= '0;
         end else if (ena) begin
-            // Input handling
-            if (load_pulse && !processing && !done) begin
-                samples_real[sample_counter] <= $signed(uio_in[7:4]) << 4; // Real part (upper nibble)
-                samples_imag[sample_counter] <= $signed(uio_in[3:0]) << 4; // Imag part (lower nibble)
-                
-                if (sample_counter == 3) begin
-                    processing <= 1;
-                    sample_counter <= 0;
-                end else begin
-                    sample_counter <= sample_counter + 1;
-                end
-            end
+            // Set processing flag when last sample loaded
+            if (load_pulse && addr == 2'd3) 
+                processing <= '1;
+            else if (processing) 
+                processing <= '0;
             
-            // FFT computation (2-stage pipeline)
-            if (processing) begin
-                // Stage 1: First two butterflies
-                fft_real[0] <= samples_real[0] + samples_real[2];
-                fft_imag[0] <= samples_imag[0] + samples_imag[2];
-                fft_real[1] <= samples_real[0] - samples_real[2];
-                fft_imag[1] <= samples_imag[0] - samples_imag[2];
-                fft_real[2] <= samples_real[1] + samples_real[3];
-                fft_imag[2] <= samples_imag[1] + samples_imag[3];
-                fft_real[3] <= samples_real[1] - samples_real[3];
-                fft_imag[3] <= samples_imag[1] - samples_imag[3];
-                
-                // Stage 2: Final butterflies with twiddle factors
-                product_real = (fft_real[3] * W1_real) - (fft_imag[3] * W1_imag);
-                product_imag = (fft_real[3] * W1_imag) + (fft_imag[3] * W1_real);
-                
-                fft_real[1] <= fft_real[1] + (product_real >>> 7);
-                fft_imag[1] <= fft_imag[1] + (product_imag >>> 7);
-                fft_real[3] <= fft_real[1] - (product_real >>> 7);
-                fft_imag[3] <= fft_imag[1] - (product_imag >>> 7);
-                
-                processing <= 0;
-                done <= 1;
-            end
+            // Set done flag when processing completes
+            if (addr == 2'd3 && !processing)
+                done <= '1;
+            else if (output_counter == 2'd3)
+                done <= '0;
             
-            // Output handling
+            // Handle output counter
             if (output_pulse && done) begin
-                uio_oe <= 8'hFF; // Enable output drivers
-                if (output_counter == 3) begin
-                    output_counter <= 0;
-                    done <= 0;
-                end else begin
+                uio_oe <= '1;
+                if (output_counter == 2'd3)
+                    output_counter <= '0;
+                else
                     output_counter <= output_counter + 1;
-                end
             end else begin
-                uio_oe <= 8'h00;
+                uio_oe <= '0;
             end
         end
     end
     
     // Output multiplexer
-    assign uio_out = {fft_real[output_counter][7:4], fft_imag[output_counter][7:4]};
-    
+    assign uio_out = {fft_real[output_counter][7:4], 
+                    fft_imag[output_counter][7:4]};
 endmodule
