@@ -48,7 +48,7 @@ test-butterfly:
 	$(MAKE) sim \
 		MODULE=test_butterfly \
 		TOPLEVEL=butterfly_tb \
-		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.sv ../src/butterfly_unit.sv" \
+		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.sv ../src/butterfly.sv" \
 		PYTHONPATH=$(PWD)/butterfly_unit \
 		WAVES_DIR=$(PWD)/butterfly_unit/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/butterfly_unit/wave/butterfly_tb_$(TIMESTAMP).vcd\""'

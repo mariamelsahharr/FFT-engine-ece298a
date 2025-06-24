@@ -2,11 +2,11 @@
 `timescale 1ns / 1ps
 
 module butterfly_tb (
-    input  logic [15:0] A,
-    input  logic [15:0] B,
-    input  logic [15:0] T,
-    output logic [15:0] Pos,
-    output logic [15:0] Neg
+    input  logic signed [7:0] A_real, A_imag,
+    input  logic signed [7:0] B_real, B_imag,
+    input  logic signed [7:0] W_real, W_imag,
+    output logic signed [7:0] Pos_real, Pos_imag,
+    output logic signed [7:0] Neg_real, Neg_imag
 );
 
     // Dump the signals to a VCD file
@@ -23,12 +23,17 @@ module butterfly_tb (
     end
 
     // Instantiate the butterfly unit (DUT)
-    butterfly #(.WIDTH(16)) dut (
-        .A(A),
-        .B(B),
-        .T(T),
-        .Pos(Pos),
-        .Neg(Neg)
+    butterfly dut (
+        .A_real(A_real),
+        .A_imag(A_imag),
+        .B_real(B_real),
+        .B_imag(B_imag),
+        .W_real(W_real),
+        .W_imag(W_imag),
+        .Pos_real(Pos_real),
+        .Pos_imag(Pos_imag),
+        .Neg_real(Neg_real),
+        .Neg_imag(Neg_imag)
     );
 
-endmodule 
+endmodule

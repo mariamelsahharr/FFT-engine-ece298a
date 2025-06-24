@@ -1,0 +1,62 @@
+$date
+	Tue Jun 24 18:33:08 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module butterfly_tb $end
+$var wire 8 ! A_imag [7:0] $end
+$var wire 8 " A_real [7:0] $end
+$var wire 8 # B_imag [7:0] $end
+$var wire 8 $ B_real [7:0] $end
+$var wire 8 % W_imag [7:0] $end
+$var wire 8 & W_real [7:0] $end
+$var wire 8 ' Pos_real [7:0] $end
+$var wire 8 ( Pos_imag [7:0] $end
+$var wire 8 ) Neg_real [7:0] $end
+$var wire 8 * Neg_imag [7:0] $end
+$scope module dut $end
+$var wire 8 + A_imag [7:0] $end
+$var wire 8 , A_real [7:0] $end
+$var wire 8 - B_imag [7:0] $end
+$var wire 8 . B_real [7:0] $end
+$var wire 8 / W_imag [7:0] $end
+$var wire 8 0 W_real [7:0] $end
+$var wire 16 1 product_real [15:0] $end
+$var wire 16 2 product_imag [15:0] $end
+$var wire 8 3 Pos_real [7:0] $end
+$var wire 8 4 Pos_imag [7:0] $end
+$var wire 8 5 Neg_real [7:0] $end
+$var wire 8 6 Neg_imag [7:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b11100 6
+b1101 5
+b1100 4
+b111 3
+b1111100010000000 2
+b1111110110000000 1
+b10000000 0
+b0 /
+b101 .
+b1111 -
+b1010 ,
+b10100 +
+b11100 *
+b1101 )
+b1100 (
+b111 '
+b10000000 &
+b0 %
+b101 $
+b1111 #
+b1010 "
+b10100 !
+$end
+#1001
