@@ -146,8 +146,8 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
         fft_start    = 1'b0;
 
         case (state)
-            S_IDLE: if (load_pulse && load_counter < 2'd4) next_state = S_LOAD;
-                    else if (load_counter == 2'd4) next_state = S_FFT_READ;
+            S_IDLE: if (load_pulse && load_counter < 2'd3) next_state = S_LOAD;
+                    else if (load_counter == 2'd3) next_state = S_FFT_READ;
 
             S_LOAD: begin
                 mem_en       = 1'b1;
@@ -187,8 +187,8 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
                 else next_state = S_FFT_WAIT;
             end
 
-            S_OUTPUT_WAIT: if (output_pulse && output_counter < 2'd4) next_state = S_OUTPUT_DRIVE;
-                           else if (output_counter == 2'd4) next_state = S_IDLE;
+            S_OUTPUT_WAIT: if (output_pulse && output_counter < 2'd3) next_state = S_OUTPUT_DRIVE;
+                           else if (output_counter == 2'd3) next_state = S_IDLE;
 
             S_OUTPUT_DRIVE: begin
                 uio_oe       = 8'hFF;
@@ -228,6 +228,6 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
         endcase
     end
 
-    wire _unused = &{ui_in[7:2], mem_read_valid, fft_freq0[11:8], fft_freq[3:0], fft_freq1[11:8], fft_freq1[3:0], fft_freq2[11:8], fft_freq2[3:0], fft_freq3[11:8], fft_freq3[3:0]};
+    wire _unused = &{ui_in[7:2], mem_read_valid, fft_freq0[11:8], fft_freq0[3:0], fft_freq1[11:8], fft_freq1[3:0], fft_freq2[11:8], fft_freq2[3:0], fft_freq3[11:8], fft_freq3[3:0]};
 
 endmodule
