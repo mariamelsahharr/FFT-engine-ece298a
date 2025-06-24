@@ -87,28 +87,8 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
 
     display_controller disp_ctrl ( .fsm_state_in(display_code), .seg_out(uo_out) );
 
-    // --- Display Logic ---
-    // Translates FSM state and counters into the correct display code.
-    always_comb begin
-        case (state)
-            S_IDLE, S_LOAD:
-                display_code = load_counter + 1;
-
-            S_FFT_READ, S_FFT_WAIT, S_FFT_START:
-                // Any of the computation states should display 'C'.
-                display_code = 9;
-
-            S_OUTPUT_WAIT, S_OUTPUT_DRIVE:
-                // output_counter will be 0, 1, 2, or 3. We want to display 5, 6, 7, or 8.
-                display_code = output_counter + 5;
-            
-            default:
-                display_code = 0;
-        endcase
-    end
-
     // --- FSM Sequential Logic (CORRECTED) ---
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             state <= S_IDLE;
             load_counter <= 0;
@@ -166,8 +146,8 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
         fft_start    = 1'b0;
 
         case (state)
-            S_IDLE: if (load_pulse && load_counter < 4) next_state = S_LOAD;
-                    else if (load_counter == 4) next_state = S_FFT_READ;
+            S_IDLE: if (load_pulse && load_counter < 2'd4) next_state = S_LOAD;
+                    else if (load_counter == 2'd4) next_state = S_FFT_READ;
 
             S_LOAD: begin
                 mem_en       = 1'b1;
@@ -207,8 +187,8 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
                 else next_state = S_FFT_WAIT;
             end
 
-            S_OUTPUT_WAIT: if (output_pulse && output_counter < 4) next_state = S_OUTPUT_DRIVE;
-                           else if (output_counter == 4) next_state = S_IDLE;
+            S_OUTPUT_WAIT: if (output_pulse && output_counter < 2'd4) next_state = S_OUTPUT_DRIVE;
+                           else if (output_counter == 2'd4) next_state = S_IDLE;
 
             S_OUTPUT_DRIVE: begin
                 uio_oe       = 8'hFF;
@@ -217,6 +197,8 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
                 mem_addr_a   = output_counter;
                 next_state   = S_OUTPUT_WAIT;
             end
+
+            default: next_state = S_IDLE;
         endcase
     end
     
@@ -225,11 +207,11 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
     always_comb begin
         case (state)
             S_IDLE, S_LOAD:
-                display_code = load_counter + 1;
+                display_code = load_counter + 3'd1;
             S_FFT_READ, S_FFT_START, S_FFT_WAIT:
                 display_code = 9; // Code for 'C'
             S_OUTPUT_WAIT, S_OUTPUT_DRIVE:
-                display_code = output_counter + 5;
+                display_code = output_counter + 3'd5;
             default:
                 display_code = 0;
         endcase
@@ -245,5 +227,7 @@ module tt_um_FFT_engine ( // Using the TinyTapeout wrapper name
             default: uio_out = 8'h00;
         endcase
     end
+
+    wire _unused = &{ui_in[7:2], mem_read_valid, fft_freq0[11:8], fft_freq[3:0], fft_freq1[11:8], fft_freq1[3:0], fft_freq2[11:8], fft_freq2[3:0], fft_freq3[11:8], fft_freq3[3:0]};
 
 endmodule

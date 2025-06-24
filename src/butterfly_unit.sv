@@ -27,8 +27,8 @@ module butterfly #( WIDTH = 16 ) (
     assign product_real = (w_real * b_real) - (w_imag * b_imag);
     assign product_imag = (w_imag * b_real) + (w_real * b_imag);
 
-    assign product_real_trunc = product_real[ WIDTH - 1 : WIDTH - 1 - WIDTH/2 ];
-    assign product_imag_trunc = product_imag[ WIDTH - 1 : WIDTH - 1 - WIDTH/2 ];
+    assign product_real_trunc = product_real[ WIDTH - 1 : WIDTH/2 ];
+    assign product_imag_trunc = product_imag[ WIDTH - 1 : WIDTH/2 ];
 
     assign Pos  = {
         A[ WIDTH - 1 : WIDTH/2 ] + product_real_trunc,
