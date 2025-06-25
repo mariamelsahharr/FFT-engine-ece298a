@@ -1,0 +1,501 @@
+$date
+	Tue Jun 24 19:50:12 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module fft_engine_tb $end
+$var wire 1 ! clk $end
+$var wire 8 " in0_imag [7:0] $end
+$var wire 8 # in0_real [7:0] $end
+$var wire 8 $ in1_imag [7:0] $end
+$var wire 8 % in1_real [7:0] $end
+$var wire 8 & in2_imag [7:0] $end
+$var wire 8 ' in2_real [7:0] $end
+$var wire 8 ( in3_imag [7:0] $end
+$var wire 8 ) in3_real [7:0] $end
+$var wire 1 * rst $end
+$var wire 8 + out3_real [7:0] $end
+$var wire 8 , out3_imag [7:0] $end
+$var wire 8 - out2_real [7:0] $end
+$var wire 8 . out2_imag [7:0] $end
+$var wire 8 / out1_real [7:0] $end
+$var wire 8 0 out1_imag [7:0] $end
+$var wire 8 1 out0_real [7:0] $end
+$var wire 8 2 out0_imag [7:0] $end
+$scope module dut $end
+$var wire 1 ! clk $end
+$var wire 8 3 in0_imag [7:0] $end
+$var wire 8 4 in0_real [7:0] $end
+$var wire 8 5 in1_imag [7:0] $end
+$var wire 8 6 in1_real [7:0] $end
+$var wire 8 7 in2_imag [7:0] $end
+$var wire 8 8 in2_real [7:0] $end
+$var wire 8 9 in3_imag [7:0] $end
+$var wire 8 : in3_real [7:0] $end
+$var wire 1 * rst $end
+$var wire 8 ; bfly_pos_real [7:0] $end
+$var wire 8 < bfly_pos_imag [7:0] $end
+$var wire 8 = bfly_neg_real [7:0] $end
+$var wire 8 > bfly_neg_imag [7:0] $end
+$var reg 8 ? out0_imag [7:0] $end
+$var reg 8 @ out0_real [7:0] $end
+$var reg 8 A out1_imag [7:0] $end
+$var reg 8 B out1_real [7:0] $end
+$var reg 8 C out2_imag [7:0] $end
+$var reg 8 D out2_real [7:0] $end
+$var reg 8 E out3_imag [7:0] $end
+$var reg 8 F out3_real [7:0] $end
+$scope module bfly_stage1_0 $end
+$var wire 8 G A_imag [7:0] $end
+$var wire 8 H A_real [7:0] $end
+$var wire 8 I B_imag [7:0] $end
+$var wire 8 J B_real [7:0] $end
+$var wire 8 K W_imag [7:0] $end
+$var wire 8 L W_real [7:0] $end
+$var wire 16 M product_real [15:0] $end
+$var wire 16 N product_imag [15:0] $end
+$var wire 8 O Pos_real [7:0] $end
+$var wire 8 P Pos_imag [7:0] $end
+$var wire 8 Q Neg_real [7:0] $end
+$var wire 8 R Neg_imag [7:0] $end
+$upscope $end
+$scope module bfly_stage1_1 $end
+$var wire 8 S A_imag [7:0] $end
+$var wire 8 T A_real [7:0] $end
+$var wire 8 U B_imag [7:0] $end
+$var wire 8 V B_real [7:0] $end
+$var wire 8 W W_imag [7:0] $end
+$var wire 8 X W_real [7:0] $end
+$var wire 16 Y product_real [15:0] $end
+$var wire 16 Z product_imag [15:0] $end
+$var wire 8 [ Pos_real [7:0] $end
+$var wire 8 \ Pos_imag [7:0] $end
+$var wire 8 ] Neg_real [7:0] $end
+$var wire 8 ^ Neg_imag [7:0] $end
+$upscope $end
+$scope module bfly_stage2_1 $end
+$var wire 8 _ A_imag [7:0] $end
+$var wire 8 ` A_real [7:0] $end
+$var wire 8 a B_imag [7:0] $end
+$var wire 8 b B_real [7:0] $end
+$var wire 8 c W_imag [7:0] $end
+$var wire 8 d W_real [7:0] $end
+$var wire 16 e product_real [15:0] $end
+$var wire 16 f product_imag [15:0] $end
+$var wire 8 g Pos_real [7:0] $end
+$var wire 8 h Pos_imag [7:0] $end
+$var wire 8 i Neg_real [7:0] $end
+$var wire 8 j Neg_imag [7:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+bx j
+bx i
+bx h
+bx g
+bx f
+bx e
+b0 d
+b10000000 c
+bx b
+bx a
+bx `
+bx _
+bx ^
+bx ]
+bx \
+bx [
+bx Z
+bx Y
+b10000000 X
+b0 W
+bz V
+bz U
+bz T
+bz S
+bx R
+bx Q
+bx P
+bx O
+bx N
+bx M
+b10000000 L
+b0 K
+bz J
+bz I
+bz H
+bz G
+b0 F
+b0 E
+b0 D
+b0 C
+b0 B
+b0 A
+b0 @
+b0 ?
+bx >
+bx =
+bx <
+bx ;
+bz :
+bz 9
+bz 8
+bz 7
+bz 6
+bz 5
+bz 4
+bz 3
+b0 2
+b0 1
+b0 0
+b0 /
+b0 .
+b0 -
+b0 ,
+b0 +
+1*
+bz )
+bz (
+bz '
+bz &
+bz %
+bz $
+bz #
+bz "
+1!
+$end
+#5000
+0!
+#10000
+0*
+1!
+#15000
+0!
+#20000
+b1000000 ;
+b1000000 g
+b1000000 =
+b1000000 i
+b0 <
+b0 h
+b0 >
+b0 j
+b0 [
+b0 e
+b0 f
+b0 ]
+b0 b
+b0 \
+b0 ^
+b0 a
+b1000000 O
+b1000000 Q
+b1000000 `
+b0 P
+b0 R
+b0 _
+b0 Y
+b0 Z
+b0 (
+b0 9
+b0 U
+b0 )
+b0 :
+b0 V
+b0 M
+b0 N
+b0 &
+b0 7
+b0 I
+b0 '
+b0 8
+b0 J
+b0 $
+b0 5
+b0 S
+b0 %
+b0 6
+b0 T
+b0 "
+b0 3
+b0 G
+b1000000 #
+b1000000 4
+b1000000 H
+bx ,
+bx E
+bx +
+bx F
+bx 0
+bx A
+bx /
+bx B
+bx .
+bx C
+bx -
+bx D
+bx 2
+bx ?
+bx 1
+bx @
+1!
+#25000
+0!
+#30000
+b0 ,
+b0 E
+b1000000 +
+b1000000 F
+b0 0
+b0 A
+b1000000 /
+b1000000 B
+b0 .
+b0 C
+b1000000 -
+b1000000 D
+b0 2
+b0 ?
+b1000000 1
+b1000000 @
+1!
+#35000
+0!
+#40000
+1!
+#45000
+0!
+#50000
+1!
+#50001
+b0 +
+b0 F
+b0 -
+b0 D
+b0 /
+b0 B
+b0 1
+b0 @
+1*
+#55001
+0!
+#60001
+1!
+#65001
+0!
+#70001
+0*
+1!
+#75001
+0!
+#80001
+b11101100 <
+b11101100 h
+b10110100 >
+b10110100 j
+b10110100 ;
+b10110100 g
+b11000100 =
+b11000100 i
+b11011000 \
+b11110000000000 e
+b1111000 ^
+b1111000 a
+b11011000 [
+b1100111000000000 f
+b1100100 ]
+b1100100 b
+b11011000 P
+b1010000 R
+b1010000 _
+b11011000 O
+b111100 Q
+b111100 `
+b1101100000000000 Z
+b1010000 (
+b1010000 9
+b1010000 U
+b1101110100000000 Y
+b1000110 )
+b1000110 :
+b1000110 V
+b1110001000000000 N
+b111100 &
+b111100 7
+b111100 I
+b1110011100000000 M
+b110010 '
+b110010 8
+b110010 J
+b101000 $
+b101000 5
+b101000 S
+b11110 %
+b11110 6
+b11110 T
+b10100 "
+b10100 3
+b10100 G
+b1010 #
+b1010 4
+b1010 H
+b1000000 +
+b1000000 F
+b1000000 /
+b1000000 B
+b1000000 -
+b1000000 D
+b1000000 1
+b1000000 @
+1!
+#85001
+0!
+#90001
+b10110100 ,
+b10110100 E
+b11000100 +
+b11000100 F
+b11101100 0
+b11101100 A
+b10110100 /
+b10110100 B
+b0 -
+b0 D
+b10110000 2
+b10110000 ?
+b10110000 1
+b10110000 @
+1!
+#95001
+0!
+#100001
+1!
+#105001
+0!
+#110001
+1!
+#110002
+b0 ,
+b0 E
+b0 +
+b0 F
+b0 0
+b0 A
+b0 /
+b0 B
+b0 2
+b0 ?
+b0 1
+b0 @
+1*
+#115002
+0!
+#120002
+1!
+#125002
+0!
+#130002
+0*
+1!
+#135002
+0!
+#140002
+b11111001 <
+b11111001 h
+b11101011 >
+b11101011 j
+b11101000 ;
+b11101000 g
+b110110 =
+b110110 i
+b1000011 \
+b1110110010000000 e
+b11011001 ^
+b11011001 a
+b10001111 [
+b1110000000 f
+b11111001 ]
+b11111001 b
+b1101100 P
+b11110010 R
+b11110010 _
+b10111001 O
+b1111 Q
+b1111 `
+b1101010000000 Z
+b11001011 (
+b11001011 9
+b11001011 U
+b1110010110000000 Y
+b110101 )
+b110101 :
+b110101 V
+b1111010000000 N
+b11000011 &
+b11000011 7
+b11000011 I
+b1110101010000000 M
+b101011 '
+b101011 8
+b101011 J
+b1110 $
+b1110 5
+b1110 S
+b11000100 %
+b11000100 6
+b11000100 T
+b101111 "
+b101111 3
+b101111 G
+b11100100 #
+b11100100 4
+b11100100 H
+b10110100 ,
+b10110100 E
+b11000100 +
+b11000100 F
+b11101100 0
+b11101100 A
+b10110100 /
+b10110100 B
+b10110000 2
+b10110000 ?
+b10110000 1
+b10110000 @
+1!
+#145002
+0!
+#150002
+b11101011 ,
+b11101011 E
+b110110 +
+b110110 F
+b11111001 0
+b11111001 A
+b11101000 /
+b11101000 B
+b101001 .
+b101001 C
+b101010 -
+b101010 D
+b10101111 2
+b10101111 ?
+b1001000 1
+b1001000 @
+1!
+#155002
+0!
+#160002
+1!
+#165002
+0!
+#170002
+1!
+#170003

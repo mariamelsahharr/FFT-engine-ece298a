@@ -41,7 +41,7 @@ endif
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
 
-.PHONY: test-butterfly test-memory test-fft
+.PHONY: test-butterfly test-fft-engine
 
 test-butterfly:
 	$(MAKE) clean
@@ -53,25 +53,15 @@ test-butterfly:
 		WAVES_DIR=$(PWD)/butterfly_unit/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/butterfly_unit/wave/butterfly_tb_$(TIMESTAMP).vcd\""'
 
-test-switch:
+test-fft-engine:
 	$(MAKE) clean
 	$(MAKE) sim \
-		MODULE=test_switch \
-		TOPLEVEL=switch_tb \
-		VERILOG_SOURCES="./switch_interface/switch_tb.sv ../src/switch_interface.sv" \
-		PYTHONPATH=$(PWD)/switch_interface \
-		WAVES_DIR=$(PWD)/butterfly_interface/wave \
-		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/switch_interface/wave/switch_tb_$(TIMESTAMP).vcd\""'
-
-test-memory:
-	$(MAKE) clean
-	$(MAKE) sim \
-		MODULE=memory_test \
-		TOPLEVEL=memory_tb \
-		VERILOG_SOURCES="./memory_test/memory_tb.sv ../src/fft_memory.sv" \
-		PYTHONPATH=$(PWD)/memory_test \
-		WAVES_DIR=$(PWD)/memory_test/wave \
-		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_tb_$(TIMESTAMP).vcd\""'
+		MODULE=test_fft_engine \
+		TOPLEVEL=fft_engine_tb \
+		VERILOG_SOURCES="./fft_engine/fft_engine_tb.sv ../src/fft_engine.sv ../src/butterfly.sv" \
+		PYTHONPATH=$(PWD)/fft_engine \
+		WAVES_DIR=$(PWD)/fft_engine/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/fft_engine/wave/fft_engine_tb_$(TIMESTAMP).vcd\""'
 
 test-fft:
 	$(MAKE) clean
