@@ -2,58 +2,38 @@
 `timescale 1ns / 1ps
 
 module butterfly_tb (
-  output logic [7:0] plus,
-  output logic [7:0] minus
+    input  logic signed [7:0] A_real, A_imag,
+    input  logic signed [7:0] B_real, B_imag,
+    input  logic signed [7:0] W_real, W_imag,
+    output logic signed [7:0] Pos_real, Pos_imag,
+    output logic signed [7:0] Neg_real, Neg_imag
 );
 
-  // Dump the signals to a VCD file
-  string vcd_name;
-  initial begin
+    // Dump the signals to a VCD file
+    string vcd_name;
+    initial begin
 `ifdef VCD_PATH
-    vcd_name = `VCD_PATH;
+        vcd_name = `VCD_PATH;
 `else
-    vcd_name = {"butterfly_tb_", `TIMESTAMP, ".vcd"};
+        vcd_name = {"butterfly_tb_", `TIMESTAMP, ".vcd"};
 `endif
-    $dumpfile(vcd_name);
-    $dumpvars(0, butterfly_tb);
-    #1;
-  end
+        $dumpfile(vcd_name);
+        $dumpvars(0, butterfly_tb);
+        #1;
+    end
 
-  // Clock and control signals
-  reg clk;
-  reg rst;
-  reg en;
-  
-  // Input data signals (8-bit packed complex)
-  reg [7:0] A;
-  reg [7:0] B;
-  reg [7:0] T;
-  
-  // Output signals
-  wire [7:0] Pos;
-  wire [7:0] Neg;
-  wire        valid;
+    // Instantiate the butterfly unit (DUT)
+    butterfly dut (
+        .A_real(A_real),
+        .A_imag(A_imag),
+        .B_real(B_real),
+        .B_imag(B_imag),
+        .W_real(W_real),
+        .W_imag(W_imag),
+        .Pos_real(Pos_real),
+        .Pos_imag(Pos_imag),
+        .Neg_real(Neg_real),
+        .Neg_imag(Neg_imag)
+    );
 
-  // Instantiate the butterfly unit (DUT)
-  butterfly_unit dut (
-      .clk(clk),
-      .rst(rst),
-      .en(en),
-      .A(A),
-      .B(B),
-      .T(T),
-      .Pos(Pos),
-      .Neg(Neg),
-      .valid(valid)
-  );
-
-  // Instantiate the golden model for comparison
-  butterfly_golden #(.WIDTH(8)) golden_model (
-      .A(A),
-      .B(B),
-      .W(T),      // T maps to W
-      .plus(plus),
-      .minus(minus)
-  );
-
-endmodule 
+endmodule

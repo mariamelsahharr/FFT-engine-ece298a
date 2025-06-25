@@ -18,11 +18,11 @@ project:
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
     - "top_fft.sv"
+    - "butterfly.sv"
+    - "display_ctrl.sv"
     - "fft_engine.sv"
-    - "fft_memory.sv"
-    - "display_controller.sv"
-    - "butterfly_unit.sv"
-    - "switch_interface.sv"
+    - "io_ctrl.sv"
+    - "memory_ctrl.sv"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).

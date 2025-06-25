@@ -41,40 +41,37 @@ endif
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
 
-.PHONY: test-butterfly test-memory test-fft
+.PHONY: test-butterfly test-fft-engine
 
 test-butterfly:
 	$(MAKE) clean
 	$(MAKE) sim \
 		MODULE=test_butterfly \
 		TOPLEVEL=butterfly_tb \
-		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.sv ./butterfly_unit/butterfly_golden.sv ../src/butterfly_unit.sv" \
+		VERILOG_SOURCES="./butterfly_unit/butterfly_tb.sv ../src/butterfly.sv" \
 		PYTHONPATH=$(PWD)/butterfly_unit \
 		WAVES_DIR=$(PWD)/butterfly_unit/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/butterfly_unit/wave/butterfly_tb_$(TIMESTAMP).vcd\""'
 
-test-switch:
+test-fft-engine:
 	$(MAKE) clean
 	$(MAKE) sim \
-		MODULE=test_switch \
-		TOPLEVEL=switch_tb \
-		VERILOG_SOURCES="./switch_interface/switch_tb.sv ../src/switch_interface.sv" \
-		PYTHONPATH=$(PWD)/switch_interface \
-		WAVES_DIR=$(PWD)/butterfly_interface/wave \
-		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/switch_interface/wave/switch_tb_$(TIMESTAMP).vcd\""'
+		MODULE=test_fft_engine \
+		TOPLEVEL=fft_engine_tb \
+		VERILOG_SOURCES="./fft_engine/fft_engine_tb.sv ../src/fft_engine.sv ../src/butterfly.sv" \
+		PYTHONPATH=$(PWD)/fft_engine \
+		WAVES_DIR=$(PWD)/fft_engine/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/fft_engine/wave/fft_engine_tb_$(TIMESTAMP).vcd\""'
 
-test-memory:
+test-fft:
 	$(MAKE) clean
 	$(MAKE) sim \
-		MODULE=memory_test \
-		TOPLEVEL=memory_tb \
-		VERILOG_SOURCES="./memory_test/memory_tb.sv ../src/fft_memory.sv" \
-		PYTHONPATH=$(PWD)/memory_test \
-		WAVES_DIR=$(PWD)/memory_test/wave \
-		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_test/wave/memory_tb_$(TIMESTAMP).vcd\""'
-
-#test-fft:
-#	$(MAKE) sim MODULE=fft_engine_test TOPLEVEL=tt_um_FFT_engine VERILOG_SOURCES="$(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))"
+		MODULE=fft_simple_test \
+		TOPLEVEL=fft_tb \
+		VERILOG_SOURCES="./fft_test/fft_tb.sv ./fft_test/fft_4point_16bit.sv ./butterfly_unit/butterfly_golden.sv ../src/fft_engine.sv ../src/butterfly_unit.sv" \
+		PYTHONPATH=$(PWD)/fft_test \
+		WAVES_DIR=$(PWD)/fft_test/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/fft_test/wave/fft_tb_$(TIMESTAMP).vcd\""'
 
 # Phony target for cleaning up
 .PHONY: clean
