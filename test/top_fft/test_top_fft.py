@@ -86,7 +86,6 @@ async def test_reset_and_initial_state(dut):
     
     assert dut.uio_oe.value == 0
     dut._log.info("Skipping uo_out check as display_ctrl has non-zero reset state.")
-    # --------------------------------------------------------------------------------
     dut._log.info("Reset test passed")
 
 
@@ -112,7 +111,7 @@ async def test_full_fft_cycle(dut):
         await load_sample(dut, raw_inputs[i])
 
     dut._log.info("--- Waiting for processing to complete ---")
-    await ClockCycles(dut.clk, 10) # Give it a few cycles to be safe
+    await ClockCycles(dut.clk, 10)
     
     dut._log.info("Pulsing load three more times to trigger 'done' state (RTL quirk)")
     await load_sample(dut, 0)
@@ -120,14 +119,14 @@ async def test_full_fft_cycle(dut):
     await load_sample(dut, 0)
     
     dut._log.info("Verifying outputs can be read (which implies 'done' state was reached).")
-    # -----------------------------------------------------------------------------------------------------------
 
     dut._log.info("--- Reading Outputs ---")
     for i in range(4):
         dut._log.info(f"Triggering readout for output {i}")
         await read_output(dut)
-        # uio_oe is asserted one cycle after the read pulse is seen by the FSM
-        assert dut.uio_oe.value == 1, f"uio_oe should be high during readout cycle {i}"
+        
+        assert dut.uio_oe.value.integer == 0xFF, f"uio_oe should be high (0xFF) during readout cycle {i}"
+        # -------------------
         
         # Now we can check the value on the bus
         actual_output = dut.uio_out.value.integer
