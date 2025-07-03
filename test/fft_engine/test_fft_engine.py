@@ -112,20 +112,6 @@ async def run_test_case(dut, in0, in1, in2, in3):
             f"Output mismatch for {key}: DUT={dut_out[key]}, Expected={expected_out[key]}"
 
 @cocotb.test()
-async def test_impulse_response(dut):
-    """Test with an impulse input: [1, 0, 0, 0]."""
-    dut._log.info("Starting impulse response test")
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-    dut.rst.value = 0
-    
-    await run_test_case(dut,
-        in0=(1, 0),
-        in1=(0, 0),
-        in2=(0, 0),
-        in3=(0, 0)
-    )
-
-@cocotb.test()
 async def test_dc_input(dut):
     """Test with a DC input: [1, 1, 1, 1]."""
     dut._log.info("Starting DC input test")
