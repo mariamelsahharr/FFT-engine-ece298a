@@ -30,6 +30,7 @@ jobs:
           make test-fft-engine
           make test-memory
           make test-io
+          make test-top
           # make will return success even if the test fails, so check for failure in the results.xml
           ! grep failure results.xml
 

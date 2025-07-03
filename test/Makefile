@@ -41,7 +41,7 @@ endif
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
 
-.PHONY: test-butterfly test-fft-engine test-memory test-io
+.PHONY: test-butterfly test-fft-engine test-memory test-io test-top
 
 test-butterfly:
 	$(MAKE) clean
@@ -82,6 +82,16 @@ test-io:
 		PYTHONPATH=$(PWD)/io_ctrl \
 		WAVES_DIR=$(PWD)/io_ctrl/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/io_ctrl/wave/io_ctrl_tb_$(TIMESTAMP).vcd\""'
+
+test-top:
+	$(MAKE) clean
+	$(MAKE) sim \
+		MODULE=test_top_fft \
+		TOPLEVEL=top_fft_tb \
+		VERILOG_SOURCES="./top_fft/top_fft_tb.sv ../src/io_ctrl.sv" ../src/butterfly.sv ../src/display_ctrl.sv ../src/fft_engine.sv ../src/memory_ctrl.sv ../src/top_fft.sv\
+		PYTHONPATH=$(PWD)/top_fft \
+		WAVES_DIR=$(PWD)/top_fft/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/top_fft/wave/top_fft_tb_$(TIMESTAMP).vcd\""'
 
 # Phony target for cleaning up
 .PHONY: clean
