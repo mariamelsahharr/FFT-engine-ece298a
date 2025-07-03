@@ -87,7 +87,7 @@ test-top:
 	$(MAKE) clean
 	$(MAKE) sim \
 		MODULE=test_top_fft \
-		TOPLEVEL=top_fft_tb \
+		TOPLEVEL=tt_um_FFT_engine_tb \
 		VERILOG_SOURCES="./top_fft/top_fft_tb.sv ../src/io_ctrl.sv" ../src/butterfly.sv ../src/display_ctrl.sv ../src/fft_engine.sv ../src/memory_ctrl.sv ../src/top_fft.sv\
 		PYTHONPATH=$(PWD)/top_fft \
 		WAVES_DIR=$(PWD)/top_fft/wave \
