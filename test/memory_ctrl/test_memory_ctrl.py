@@ -7,6 +7,7 @@ import random
 
 def signed(val, bits):
     """Convert an unsigned value from a Verilog sim to a signed Python integer."""
+    # This function expects 'val' to be a Python integer.
     if val >= (1 << (bits - 1)):
         return val - (1 << bits)
     return val
@@ -183,10 +184,10 @@ async def test_randomized_writes(dut):
 
         # Verify entire memory state
         dut_state = [
-            (signed(dut.real0_out.value, 8), signed(dut.imag0_out.value, 8)),
-            (signed(dut.real1_out.value, 8), signed(dut.imag1_out.value, 8)),
-            (signed(dut.real2_out.value, 8), signed(dut.imag2_out.value, 8)),
-            (signed(dut.real3_out.value, 8), signed(dut.imag3_out.value, 8)),
+            (signed(dut.real0_out.value.integer, 8), signed(dut.imag0_out.value.integer, 8)),
+            (signed(dut.real1_out.value.integer, 8), signed(dut.imag1_out.value.integer, 8)),
+            (signed(dut.real2_out.value.integer, 8), signed(dut.imag2_out.value.integer, 8)),
+            (signed(dut.real3_out.value.integer, 8), signed(dut.imag3_out.value.integer, 8)),
         ]
         model_state = model.get_all()
         
