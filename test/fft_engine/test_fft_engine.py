@@ -110,6 +110,54 @@ async def run_test_case(dut, in0, in1, in2, in3):
         key = f'out{i}'
         assert dut_out[key] == expected_out[key], \
             f"Output mismatch for {key}: DUT={dut_out[key]}, Expected={expected_out[key]}"
+        
+@cocotb.test()
+async def test_reset(dut):
+    """Test the reset functionality of the FFT engine."""
+    dut._log.info("Starting reset test")
+    
+    # Start the clock
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # Apply reset
+    dut.rst.value = 1
+    dut.in0_real.value = 50
+    dut.in0_imag.value = 50
+    # Set other inputs to non-zero to ensure reset overrides them
+    dut.in1_real.value = -20
+    dut.in2_imag.value = 100
+    
+    await RisingEdge(dut.clk)
+    
+    # Check that all outputs are zero
+    assert dut.out0_real.value == 0
+    assert dut.out0_imag.value == 0
+    assert dut.out1_real.value == 0
+    assert dut.out1_imag.value == 0
+    assert dut.out2_real.value == 0
+    assert dut.out2_imag.value == 0
+    assert dut.out3_real.value == 0
+    assert dut.out3_imag.value == 0
+    
+    # Release reset
+    dut.rst.value = 0
+    await RisingEdge(dut.clk)
+    dut._log.info("Reset test passed")
+
+
+@cocotb.test()
+async def test_impulse_response(dut):
+    """Test with an impulse input: [1, 0, 0, 0]."""
+    dut._log.info("Starting impulse response test")
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    dut.rst.value = 0
+    
+    await run_test_case(dut,
+        in0=(1, 0),
+        in1=(0, 0),
+        in2=(0, 0),
+        in3=(0, 0)
+    )
 
 @cocotb.test()
 async def test_dc_input(dut):
