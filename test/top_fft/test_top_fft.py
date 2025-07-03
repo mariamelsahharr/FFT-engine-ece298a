@@ -3,18 +3,12 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer, ClockCycles
 import random
 
-# --- Reference Models (imported from previous tests) ---
-
 def wrap8(x):
-    """Wrap a Python integer to the signed 8-bit range [-128, 127]."""
-    if x > 127:
-        x -= 256
-    elif x < -128:
-        x += 256
+    if x > 127: x -= 256
+    elif x < -128: x += 256
     return x
 
 def model_mem_transform(data_in):
-    """Models `memory_ctrl`'s input transformation: $signed(nibble) << 4."""
     real_nibble = (data_in >> 4) & 0xF
     imag_nibble = data_in & 0xF
     real_val = (real_nibble - 16) if real_nibble >= 8 else real_nibble
@@ -22,7 +16,6 @@ def model_mem_transform(data_in):
     return (real_val << 4, imag_val << 4)
 
 def butterfly_ref_model(a_r, a_i, b_r, b_i, t_r, t_i):
-    """Reference model for the butterfly unit."""
     prod_real = t_r * b_r - t_i * b_i
     prod_imag = t_i * b_r + t_r * b_i
     scale = lambda val: wrap8(val >> 7)
@@ -30,7 +23,6 @@ def butterfly_ref_model(a_r, a_i, b_r, b_i, t_r, t_i):
     return (wrap8(a_r + pr), wrap8(a_i + pi)), (wrap8(a_r - pr), wrap8(a_i - pi))
 
 def fft_engine_ref_model(in0, in1, in2, in3):
-    """Reference model for the fft_engine."""
     W0_r, W0_i = -128, 0
     W1_r, W1_i = 0, -128
     (s1_0_p, s1_0_n) = butterfly_ref_model(in0[0], in0[1], in2[0], in2[1], W0_r, W0_i)
@@ -41,7 +33,6 @@ def fft_engine_ref_model(in0, in1, in2, in3):
     return [out0, out1, out2, out3]
 
 def pack_output(real, imag):
-    """Models the output packing: {fft_real[7:4], fft_imag[7:4]}."""
     real_msbs = (real >> 4) & 0xF
     imag_msbs = (imag >> 4) & 0xF
     return (real_msbs << 4) | imag_msbs
@@ -49,7 +40,6 @@ def pack_output(real, imag):
 # --- Test Helper Coroutines ---
 
 async def reset_dut(dut):
-    """Resets the DUT using the active-low rst_n signal."""
     dut.rst_n.value = 0
     dut.ena.value = 0
     dut.ui_in.value = 0
@@ -60,38 +50,31 @@ async def reset_dut(dut):
     dut._log.info("DUT reset")
 
 async def load_sample(dut, data_in):
-    """Drives the inputs to load one sample."""
     dut.uio_in.value = data_in
-    dut.ui_in.value = 1  # Pulse ui_in[0]
+    dut.ui_in.value = 1
     await RisingEdge(dut.clk)
     dut.ui_in.value = 0
     await RisingEdge(dut.clk)
 
-async def read_output(dut):
-    """Drives the inputs to read one output sample."""
-    dut.ui_in.value = 2 # Pulse ui_in[1]
+async def trigger_read_next(dut):
+    """Pulses ui_in[1] to advance the output counter."""
+    dut.ui_in.value = 2
     await RisingEdge(dut.clk)
     dut.ui_in.value = 0
-    await RisingEdge(dut.clk)
 
 # --- Testbenches ---
 
 @cocotb.test()
 async def test_reset_and_initial_state(dut):
-    """Verify reset clears outputs and internal state."""
     dut._log.info("Starting reset test")
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-    
     await reset_dut(dut)
-    
     assert dut.uio_oe.value == 0
-    dut._log.info("Skipping uo_out check as display_ctrl has non-zero reset state.")
     dut._log.info("Reset test passed")
 
 
 @cocotb.test()
 async def test_full_fft_cycle(dut):
-    """Tests a full end-to-end cycle: load -> process -> read."""
     dut._log.info("Starting full cycle test")
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     
@@ -110,28 +93,31 @@ async def test_full_fft_cycle(dut):
     for i in range(4):
         await load_sample(dut, raw_inputs[i])
 
-    dut._log.info("--- Waiting for processing to complete ---")
+    dut._log.info("--- Triggering 'done' state and preparing for readout ---")
     await ClockCycles(dut.clk, 10)
-    
-    dut._log.info("Pulsing load three more times to trigger 'done' state (RTL quirk)")
     await load_sample(dut, 0)
     await load_sample(dut, 0)
     await load_sample(dut, 0)
     
-    dut._log.info("Verifying outputs can be read (which implies 'done' state was reached).")
-
     dut._log.info("--- Reading Outputs ---")
+    # Trigger the very first readout to enable the output bus and set counter to 0
+    await trigger_read_next(dut)
+    
     for i in range(4):
-        dut._log.info(f"Triggering readout for output {i}")
-        await read_output(dut)
-        
-        assert dut.uio_oe.value.integer == 0xFF, f"uio_oe should be high (0xFF) during readout cycle {i}"
-        # -------------------
-        
-        # Now we can check the value on the bus
+        await RisingEdge(dut.clk)
+        dut._log.info(f"Checking output for index {i}")
+
+        # 1. Assert that the output bus is enabled
+        assert dut.uio_oe.value.integer == 0xFF, f"uio_oe should be high (0xFF) while reading index {i}"
+
+        # 2. Read the STABLE value from the bus. The output mux is already pointing to the correct data for this cycle.
         actual_output = dut.uio_out.value.integer
         expected_output = expected_packed_outputs[i]
         dut._log.info(f"  Got: {hex(actual_output)}, Expected: {hex(expected_output)}")
         assert actual_output == expected_output, f"Output mismatch for result {i}"
+
+        # 3. If not the last sample, trigger the hardware to advance to the next state for the next loop iteration.
+        if i < 3:
+            await trigger_read_next(dut)
 
     dut._log.info("Full cycle test passed!")
