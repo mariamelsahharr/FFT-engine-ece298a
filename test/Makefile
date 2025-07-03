@@ -41,7 +41,7 @@ endif
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
 
-.PHONY: test-butterfly test-fft-engine
+.PHONY: test-butterfly test-fft-engine test-memory
 
 test-butterfly:
 	$(MAKE) clean
@@ -63,15 +63,15 @@ test-fft-engine:
 		WAVES_DIR=$(PWD)/fft_engine/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/fft_engine/wave/fft_engine_tb_$(TIMESTAMP).vcd\""'
 
-test-fft:
+test-memory:
 	$(MAKE) clean
 	$(MAKE) sim \
-		MODULE=fft_simple_test \
-		TOPLEVEL=fft_tb \
-		VERILOG_SOURCES="./fft_test/fft_tb.sv ./fft_test/fft_4point_16bit.sv ./butterfly_unit/butterfly_golden.sv ../src/fft_engine.sv ../src/butterfly_unit.sv" \
-		PYTHONPATH=$(PWD)/fft_test \
-		WAVES_DIR=$(PWD)/fft_test/wave \
-		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/fft_test/wave/fft_tb_$(TIMESTAMP).vcd\""'
+		MODULE=test_memory_ctrl \
+		TOPLEVEL=memory_ctrl_tb \
+		VERILOG_SOURCES="./memory_ctrl/memory_ctrl_tb.sv ../src/memory_ctrl.sv" \
+		PYTHONPATH=$(PWD)/memory_ctrl \
+		WAVES_DIR=$(PWD)/memory_ctrl/wave \
+		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/memory_ctrl/wave/memory_ctrl_tb_$(TIMESTAMP).vcd\""'
 
 # Phony target for cleaning up
 .PHONY: clean
