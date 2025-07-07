@@ -89,6 +89,7 @@ test-top:
 		MODULE=test_top_fft \
 		TOPLEVEL=tt_um_FFT_engine_tb \
 		VERILOG_SOURCES="./top_fft/top_fft_tb.sv ../src/io_ctrl.sv ../src/butterfly.sv ../src/display_ctrl.sv ../src/fft_engine.sv ../src/memory_ctrl.sv ../src/top_fft.sv"\
+		VERILATOR_FLAGS="--trace --public-flat-rw" \
 		PYTHONPATH=$(PWD)/top_fft \
 		WAVES_DIR=$(PWD)/top_fft/wave \
 		COMPILE_ARGS='$(COMPILE_ARGS) -DVCD_PATH="\"$(PWD)/top_fft/wave/tt_um_FFT_engine_tb_$(TIMESTAMP).vcd\""'
