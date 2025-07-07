@@ -85,21 +85,21 @@ async def run_full_fft_test(dut, inputs):
         packed_val = pack_input(inputs[i][0], inputs[i][1])
         await load_sample(dut, packed_val)
     
-    # --- Wait for processing to finish ---
-    dut._log.info("Waiting for DUT to signal completion...")
-    IDLE_STATUS = 0x0C
+    # --- Wait for processing to finish (FINAL CORRECTED LOGIC) ---
+    # The most robust method is to monitor the internal 'done' signal directly.
+    dut._log.info("Waiting for DUT to assert internal 'done' signal...")
     timeout_cycles = 15
     for i in range(timeout_cycles):
-        # The 'done' state is indicated by the display showing the first output address '4'
-        if dut.uo_out.value == 0x24: 
-            dut._log.info(f"DUT indicates 'done' after {i+1} cycles.")
+        # Directly check the 'done' flag inside the DUT
+        if dut.done.value == 1:
+            dut._log.info(f"DUT asserted 'done' after {i+1} cycles.")
             break
         await RisingEdge(dut.clk)
     else: 
-        assert False, f"Timeout: DUT did not signal completion after {timeout_cycles} cycles."
+        assert False, f"Timeout: DUT did not assert 'done' after {timeout_cycles} cycles."
 
 
-    # --- Read and Verify Phase (CORRECTED LOGIC) ---
+    # --- Read and Verify Phase (This logic is correct) ---
     actual_outputs = []
     for i in range(4):
         # 1. Assert the read trigger
@@ -107,7 +107,7 @@ async def run_full_fft_test(dut, inputs):
         await RisingEdge(dut.clk)
         
         # 2. Check the output enable *before* de-asserting the trigger.
-        assert dut.uio_oe.value == 0xFF, f"uio_oe was not asserted for output {i}."
+        assert dut.uio_oe.value.integer == 0xFF, f"uio_oe was not asserted for output {i}."
         
         # 3. Sample the output data and check it
         dut_out = dut.uio_out.value.integer
