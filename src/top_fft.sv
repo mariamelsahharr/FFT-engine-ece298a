@@ -29,6 +29,7 @@ module tt_um_FFT_engine (
     
     // State tracking
     logic processing, done;
+    logic processing_dly;
     logic [1:0] output_counter;
     
     // Module instantiations
@@ -78,15 +79,17 @@ module tt_um_FFT_engine (
             done <= '0;
             output_counter <= '0;
             uio_oe <= '0;
+            processing_dly <= '0;
         end else if (ena) begin
+            processing_dly <= processing;
             if (load_pulse && addr == 2'd3) 
                 processing <= '1;
             else if (processing) 
                 processing <= '0;
             
-            if (addr == 2'd3 && !processing)
+            if (processing_dly && !processing)
                 done <= '1;
-            else if (output_counter == 2'd3)
+            else if (output_pulse && output_counter == 2'd3)
                 done <= '0;
             
             if (output_pulse && done) begin
