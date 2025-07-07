@@ -93,13 +93,12 @@ module tt_um_FFT_engine (
                 done <= '0;
             
             if (output_pulse && done) begin
-                uio_oe <= '1;
                 output_counter <= (output_counter == 2'd3) ? '0 : output_counter + 1;
-            end else begin
-                uio_oe <= '0;
             end
         end
     end
+
+    assign uio_oe = (output_pulse && done) ? 8'hFF : 8'h00;
     
     // Output selection using a case statement
     always_comb begin
