@@ -85,13 +85,14 @@ async def run_full_fft_test(dut, inputs):
         packed_val = pack_input(inputs[i][0], inputs[i][1])
         await load_sample(dut, packed_val)
     
-    # --- Wait for processing to finish (FINAL CORRECTED LOGIC) ---
-    # The most robust method is to monitor the internal 'done' signal directly.
+    # --- Wait for processing to finish ---
+    # Use the full hierarchical path to the internal 'done' signal.
+    # dut (testbench) -> dut (instance) -> done (signal)
     dut._log.info("Waiting for DUT to assert internal 'done' signal...")
-    timeout_cycles = 15
+    timeout_cycles = 20
     for i in range(timeout_cycles):
-        # Directly check the 'done' flag inside the DUT
-        if dut.done.value == 1:
+        # Access the signal using its full path: dut.dut.done
+        if dut.dut.done.value == 1: # <--- THIS IS THE FIX
             dut._log.info(f"DUT asserted 'done' after {i+1} cycles.")
             break
         await RisingEdge(dut.clk)
@@ -99,14 +100,14 @@ async def run_full_fft_test(dut, inputs):
         assert False, f"Timeout: DUT did not assert 'done' after {timeout_cycles} cycles."
 
 
-    # --- Read and Verify Phase (This logic is correct) ---
+    # --- Read and Verify Phase (This logic is correct and does not need to change) ---
     actual_outputs = []
     for i in range(4):
         # 1. Assert the read trigger
         dut.ui_in.value = 2
         await RisingEdge(dut.clk)
         
-        # 2. Check the output enable *before* de-asserting the trigger.
+        # 2. Check the output enable
         assert dut.uio_oe.value.integer == 0xFF, f"uio_oe was not asserted for output {i}."
         
         # 3. Sample the output data and check it
@@ -116,17 +117,16 @@ async def run_full_fft_test(dut, inputs):
         assert dut_out == expected_outputs[i], \
             f"Output {i} mismatch: DUT={hex(dut_out)}, Expected={hex(expected_outputs[i])}"
 
-        # 4. Now, de-assert the read trigger.
+        # 4. De-assert the read trigger.
         dut.ui_in.value = 0
 
-        # 5. Wait one more clock cycle to allow the DUT to de-assert its output enable.
+        # 5. Wait one more clock cycle.
         await RisingEdge(dut.clk)
         assert dut.uio_oe.value == 0, f"uio_oe did not de-assert after reading output {i}"
 
 
     dut._log.info(f"Actual packed outputs: {[hex(x) for x in actual_outputs]}")
     dut._log.info("Test case passed.")
-
 # --- Testbenches ---
 
 @cocotb.test()
