@@ -3,7 +3,6 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer, ClockCycles
 import random
 
-# --- Helper Functions (Unchanged) ---
 def wrap8(x):
     if x > 127: x -= 256
     elif x < -128: x += 256
@@ -21,7 +20,6 @@ def pack_output(real, imag):
     imag_msbs = (imag >> 4) & 0xF
     return (real_msbs << 4) | imag_msbs
 
-# --- Reference Models (Unchanged) ---
 def model_mem_transform(data_in):
     real_nibble = (data_in >> 4) & 0xF
     imag_nibble = data_in & 0xF
@@ -54,7 +52,6 @@ def top_fft_ref_model(raw_inputs):
     packed_outputs = [pack_output(r, i) for r, i in fft_results]
     return packed_outputs
 
-# --- Test Helper Coroutines ---
 
 async def reset_dut(dut):
     dut.rst_n.value = 0
@@ -86,13 +83,10 @@ async def run_full_fft_test(dut, inputs):
         await load_sample(dut, packed_val)
     
     # --- Wait for processing to finish ---
-    # Use the full hierarchical path to the internal 'done' signal.
-    # dut (testbench) -> dut (instance) -> done (signal)
     dut._log.info("Waiting for DUT to assert internal 'done' signal...")
     timeout_cycles = 20
     for i in range(timeout_cycles):
-        # Access the signal using its full path: dut.dut.done
-        if dut.dut.done.value == 1: # <--- THIS IS THE FIX
+        if dut.dut.done.value == 1:
             dut._log.info(f"DUT asserted 'done' after {i+1} cycles.")
             break
         await RisingEdge(dut.clk)
@@ -100,7 +94,7 @@ async def run_full_fft_test(dut, inputs):
         assert False, f"Timeout: DUT did not assert 'done' after {timeout_cycles} cycles."
 
 
-    # --- Read and Verify Phase (This logic is correct and does not need to change) ---
+    # --- Read and Verify Phase ---
     actual_outputs = []
     for i in range(4):
         # 1. Assert the read trigger
@@ -127,7 +121,6 @@ async def run_full_fft_test(dut, inputs):
 
     dut._log.info(f"Actual packed outputs: {[hex(x) for x in actual_outputs]}")
     dut._log.info("Test case passed.")
-# --- Testbenches ---
 
 @cocotb.test()
 async def test_reset_and_initial_state(dut):
