@@ -71,6 +71,8 @@ module tt_um_FFT_engine (
         .processing(processing), .done(done),
         .seg_out(uo_out)
     );
+
+    assign uio_oe = (output_pulse && done) ? 8'hFF : 8'h00;
     
     // Output control
     always_ff @(posedge clk or posedge rst) begin
@@ -78,7 +80,6 @@ module tt_um_FFT_engine (
             processing <= '0;
             done <= '0;
             output_counter <= '0;
-            uio_oe <= '0;
             processing_dly <= '0;
         end else if (ena) begin
             processing_dly <= processing;
@@ -97,8 +98,6 @@ module tt_um_FFT_engine (
             end
         end
     end
-
-    assign uio_oe = (output_pulse && done) ? 8'hFF : 8'h00;
     
     // Output selection using a case statement
     always_comb begin
