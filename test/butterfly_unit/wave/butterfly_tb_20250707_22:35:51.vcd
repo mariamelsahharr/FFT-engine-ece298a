@@ -1,0 +1,220 @@
+$date
+	Mon Jul  7 22:35:54 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module butterfly_tb $end
+$var wire 8 ! A_imag [7:0] $end
+$var wire 8 " A_real [7:0] $end
+$var wire 8 # B_imag [7:0] $end
+$var wire 8 $ B_real [7:0] $end
+$var wire 8 % W_imag [7:0] $end
+$var wire 8 & W_real [7:0] $end
+$var wire 8 ' Pos_real [7:0] $end
+$var wire 8 ( Pos_imag [7:0] $end
+$var wire 8 ) Neg_real [7:0] $end
+$var wire 8 * Neg_imag [7:0] $end
+$var reg 8 + current_test_id [7:0] $end
+$scope module dut $end
+$var wire 8 , A_imag [7:0] $end
+$var wire 8 - A_real [7:0] $end
+$var wire 8 . B_imag [7:0] $end
+$var wire 8 / B_real [7:0] $end
+$var wire 8 0 W_imag [7:0] $end
+$var wire 8 1 W_real [7:0] $end
+$var wire 16 2 product_real [15:0] $end
+$var wire 16 3 product_imag [15:0] $end
+$var wire 8 4 Pos_real [7:0] $end
+$var wire 8 5 Pos_imag [7:0] $end
+$var wire 8 6 Neg_real [7:0] $end
+$var wire 8 7 Neg_imag [7:0] $end
+$var parameter 32 8 WIDTH $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b1000 8
+$end
+#0
+$dumpvars
+b10101 7
+b1011 6
+b10011 5
+b1001 4
+b1111111111110001 3
+b1111111111111011 2
+b11111111 1
+b0 0
+b101 /
+b1111 .
+b1010 -
+b10100 ,
+b1 +
+b10101 *
+b1011 )
+b10011 (
+b1001 '
+b11111111 &
+b0 %
+b101 $
+b1111 #
+b1010 "
+b10100 !
+$end
+#1001
+b1010 '
+b1010 4
+b1010 )
+b1010 6
+b11111111 %
+b11111111 0
+b1111 2
+b1111111111111011 3
+b0 &
+b0 1
+b10 +
+#2002
+b0 (
+b0 5
+b10 *
+b10 7
+b0 '
+b0 4
+b10 )
+b10 6
+b0 %
+b0 0
+b11111111 &
+b11111111 1
+b1111111111111110 2
+b10 #
+b10 .
+b1111111111111110 3
+b10 $
+b10 /
+b1 !
+b1 ,
+b1 "
+b1 -
+b11 +
+#3003
+b11111111 (
+b11111111 5
+b1 *
+b1 7
+b0 '
+b0 4
+b0 )
+b0 6
+b11111111 %
+b11111111 0
+b0 2
+b0 &
+b0 1
+b1111111111111110 3
+b0 #
+b0 .
+b0 !
+b0 ,
+b0 "
+b0 -
+b100 +
+#4004
+b1000110 (
+b1000110 5
+b1000110 *
+b1000110 7
+b11100 '
+b11100 4
+b11110 )
+b11110 6
+b0 %
+b0 0
+b11111111 &
+b11111111 1
+b1111111111001110 2
+b10000011 #
+b10000011 .
+b1111101 3
+b110010 $
+b110010 /
+b1000110 !
+b1000110 ,
+b11101 "
+b11101 -
+b101 +
+#5004
+b101100 (
+b101100 5
+b101100 *
+b101100 7
+b1011100 '
+b1011100 4
+b1011110 )
+b1011110 6
+b11111111 %
+b11111111 0
+b0 &
+b0 1
+b110100 3
+b10011100 #
+b10011100 .
+b1111111110011100 2
+b11001100 $
+b11001100 /
+b101100 !
+b101100 ,
+b1011101 "
+b1011101 -
+#6004
+b1111111 (
+b1111111 5
+b1111111 *
+b1111111 7
+b11000000 '
+b11000000 4
+b11000000 )
+b11000000 6
+b0 %
+b0 0
+b11111111 &
+b11111111 1
+b1000000 2
+b11000000 #
+b11000000 .
+b1000000 3
+b11000000 $
+b11000000 /
+b1111111 !
+b1111111 ,
+b11000000 "
+b11000000 -
+#7004
+b10011011 (
+b10011011 5
+b10011101 *
+b10011101 7
+b1100100 '
+b1100100 4
+b1100100 )
+b1100100 6
+b11111111 %
+b11111111 0
+b0 &
+b0 1
+b1111111111110110 3
+b1010 #
+b1010 .
+b1010 2
+b1010 $
+b1010 /
+b10011100 !
+b10011100 ,
+b1100100 "
+b1100100 -
+#8005
