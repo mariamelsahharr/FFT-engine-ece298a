@@ -19,6 +19,8 @@ module memory_ctrl_tb (
     output logic signed [7:0] real3_out, imag3_out
 );
 
+logic [7:0] current_test_id = 0;
+
     // Dump the signals to a VCD file for debugging
     string vcd_name;
     initial begin
