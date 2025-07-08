@@ -9,6 +9,7 @@ module butterfly_tb (
     output logic signed [7:0] Neg_real, Neg_imag
 );
 
+logic [7:0] current_test_id = 0;
     // Dump the signals to a VCD file
     string vcd_name;
     initial begin

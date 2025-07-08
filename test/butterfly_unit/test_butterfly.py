@@ -1,6 +1,14 @@
 import cocotb
 from cocotb.triggers import Timer
 
+TEST_IDS = {
+    "neg1_twiddle":    1,
+    "negj_twiddle":    2,
+    "basic_butterfly": 3,
+    "simple_multiply": 4,
+    "rand_twiddle":    5,
+}
+
 def signed(val, bits):
     """Convert unsigned to signed."""
     if val >= (1 << (bits - 1)):
@@ -39,7 +47,6 @@ def butterfly_reference(a_r, a_i, b_r, b_i, t_r, t_i):
     def trunc(val):
         return wrap8(val >> 7)  # no rounding
 
-
     pr = trunc(prod_real)
     pi = trunc(prod_imag)
 
@@ -50,7 +57,11 @@ def butterfly_reference(a_r, a_i, b_r, b_i, t_r, t_i):
 
     return (pos_r, pos_i), (neg_r, neg_i)
 
-async def run_test(dut, A, B, T):
+# ---------- CHANGED: run_test now takes an extra 'test_id' ----------
+async def run_test(dut, A, B, T, test_id):
+    # Drive the indicator visible in the waveform
+    dut.current_test_id.value = test_id
+
     a_r, a_i = unpack_complex(A)
     b_r, b_i = unpack_complex(B)
     t_r, t_i = unpack_complex(T)
@@ -78,13 +89,17 @@ async def run_test(dut, A, B, T):
     assert (pos_r, pos_i) == expected_pos, f"Pos mismatch: got ({pos_r}, {pos_i}), expected {expected_pos}"
     assert (neg_r, neg_i) == expected_neg, f"Neg mismatch: got ({neg_r}, {neg_i}), expected {expected_neg}"
 
+    # clear indicator so gaps are obvious
+    dut.current_test_id.value = 0
+
 @cocotb.test()
 async def test_neg1_twiddle(dut):
     """Test with T = 0xFF00 (-1 + 0j)"""
     await run_test(dut,
         A=pack_complex(10, 20),
         B=pack_complex(5, 15),
-        T=0xFF00
+        T=0xFF00,
+        test_id=TEST_IDS["neg1_twiddle"]
     )
 
 @cocotb.test()
@@ -93,7 +108,8 @@ async def test_negj_twiddle(dut):
     await run_test(dut,
         A=pack_complex(10, 20),
         B=pack_complex(5, 15),
-        T=0x00FF
+        T=0x00FF,
+        test_id=TEST_IDS["negj_twiddle"]
     )
 
 @cocotb.test()
@@ -102,7 +118,8 @@ async def test_basic_butterfly(dut):
     await run_test(dut,
         A=pack_complex(1, 1),
         B=pack_complex(2, 2),
-        T=0xFF00
+        T=0xFF00,
+        test_id=TEST_IDS["basic_butterfly"]
     )
 
 @cocotb.test()
@@ -111,7 +128,8 @@ async def test_simple_multiply(dut):
     await run_test(dut,
         A=pack_complex(0, 0),
         B=pack_complex(2, 0),
-        T=0x00FF
+        T=0x00FF,
+        test_id=TEST_IDS["simple_multiply"]
     )
 
 @cocotb.test()
@@ -125,4 +143,4 @@ async def test_random_supported_twiddles(dut):
     ]
     for i, (A, B, T) in enumerate(test_vectors):
         print(f"\n--- Running random test {i+1} ---")
-        await run_test(dut, A, B, T)
+        await run_test(dut, A, B, T, test_id=TEST_IDS["rand_twiddle"])
