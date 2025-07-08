@@ -15,6 +15,8 @@ module tt_um_FFT_engine_tb (
     output wire [7:0] uio_oe
 );
 
+logic [7:0] current_test_id = 0;
+
     // Dump signals for waveform viewing
     string vcd_name;
     initial begin

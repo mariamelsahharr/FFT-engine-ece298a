@@ -3,6 +3,14 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer, ClockCycles
 import random
 
+TEST_IDS = {
+    "reset":      1,
+    "complex":    2,
+    "impulse":    3,
+    "dc":         4,
+    "random":     5,
+}
+
 def wrap8(x):
     if x > 127: x -= 256
     elif x < -128: x += 256
@@ -118,52 +126,56 @@ async def run_full_fft_test(dut, inputs):
         await RisingEdge(dut.clk)
         assert dut.uio_oe.value == 0, f"uio_oe did not de-assert after reading output {i}"
 
-
     dut._log.info(f"Actual packed outputs: {[hex(x) for x in actual_outputs]}")
     dut._log.info("Test case passed.")
 
 @cocotb.test()
 async def test_reset_and_initial_state(dut):
+    dut.current_test_id.value = TEST_IDS["reset"]          
     dut._log.info("Starting reset test")
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     await reset_dut(dut)
     assert dut.uio_oe.value == 0, "uio_oe should be low after reset"
     dut._log.info("Reset test passed")
-
+    dut.current_test_id.value = 0                           
 
 @cocotb.test()
 async def test_full_cycle_complex(dut):
+    dut.current_test_id.value = TEST_IDS["complex"]        
     dut._log.info("Starting full cycle test with complex values")
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     await reset_dut(dut)
     inputs = [(16, 32), (-48, -64), (80, -96), (-112, 112)]
     await run_full_fft_test(dut, inputs)
-
+    dut.current_test_id.value = 0                           
 
 @cocotb.test()
 async def test_fft_impulse(dut):
+    dut.current_test_id.value = TEST_IDS["impulse"]        
     dut._log.info("Starting impulse response test")
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     await reset_dut(dut)
     inputs = [(16, 0), (0, 0), (0, 0), (0, 0)]
     await run_full_fft_test(dut, inputs)
-
+    dut.current_test_id.value = 0                           
 
 @cocotb.test()
 async def test_fft_dc_input(dut):
+    dut.current_test_id.value = TEST_IDS["dc"]            
     dut._log.info("Starting DC input test")
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     await reset_dut(dut)
     inputs = [(16, 0), (16, 0), (16, 0), (16, 0)]
     await run_full_fft_test(dut, inputs)
-
+    dut.current_test_id.value = 0                          
 
 @cocotb.test()
 async def test_randomized_end_to_end(dut):
+    dut.current_test_id.value = TEST_IDS["random"]         
     dut._log.info("Starting randomized end-to-end test")
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     valid_values = list(range(-128, 128, 16))
-    num_tests = 5 # Reduced for speed
+    num_tests = 5
     for i in range(num_tests):
         dut._log.info(f"--- Randomized Test Iteration {i+1}/{num_tests} ---")
         await reset_dut(dut)
@@ -174,3 +186,4 @@ async def test_randomized_end_to_end(dut):
             (random.choice(valid_values), random.choice(valid_values))
         ]
         await run_full_fft_test(dut, inputs)
+    dut.current_test_id.value = 0                           
