@@ -15,6 +15,8 @@ module io_ctrl_tb (
     output logic [1:0] addr
 );
 
+logic [7:0] current_test_id = 0;
+
     // Dump signals for waveform viewing
     string vcd_name;
     initial begin
