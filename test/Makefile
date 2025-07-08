@@ -11,10 +11,10 @@ COMPILE_ARGS += -DTIMESTAMP=\"$(TIMESTAMP)\"
 
 PROJECT_SOURCES = top_fft.sv \
                   fft_engine.sv \
-                  fft_memory.sv \
-                  display_controller.sv \
-                  butterfly_unit.sv \
-                  switch_interface.sv
+                  display_ctrl.sv \
+                  butterfly.sv \
+				  io_ctrl.sv \
+				  memory_ctrl.sv \
 				  
 ifneq ($(GATES),yes)
 
@@ -98,5 +98,9 @@ test-top:
 .PHONY: clean
 clean::
 	rm -rf sim_build* results.xml
+
+.PHONY: all
+all: test-butterfly test-fft-engine test-memory test-io test-top
+
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
