@@ -3,6 +3,14 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 import random
 
+TEST_IDS = {
+    "reset":    1,
+    "impulse":  2,
+    "dc":       3,
+    "complex":  4,
+    "random":   5,
+}
+
 # --- Helper Functions ---
 
 def signed(val, bits):
@@ -92,8 +100,10 @@ def fft_engine_ref_model(in0, in1, in2, in3):
 
 # --- Test Runner Coroutine ---
 
-async def run_test_case(dut, in0, in1, in2, in3):
+async def run_test_case(dut, in0, in1, in2, in3, test_id):
     """Drives inputs, clocks the DUT, and compares outputs with the reference model."""
+    dut.current_test_id.value = test_id
+
     dut.in0_real.value, dut.in0_imag.value = in0
     dut.in1_real.value, dut.in1_imag.value = in1
     dut.in2_real.value, dut.in2_imag.value = in2
@@ -124,13 +134,17 @@ async def run_test_case(dut, in0, in1, in2, in3):
         assert dut_out[key] == expected_out[key], \
             f"Output mismatch for {key}: DUT={dut_out[key]}, Expected={expected_out[key]}"
 
+    # clear the flag so gaps are visible
+    dut.current_test_id.value = 0
+
 # --- Testbenches ---
 
 @cocotb.test()
 async def test_reset(dut):
     """Test the reset functionality of the FFT engine."""
     dut._log.info("Starting reset test")
-    
+    dut.current_test_id.value = TEST_IDS["reset"]   # NEW
+
     # Start the clock
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
@@ -176,6 +190,7 @@ async def test_reset(dut):
         f"Output 'out0' after reset is incorrect. DUT={dut_out0}, Expected={expected_out['out0']}"
 
     dut._log.info("Reset test passed")
+    dut.current_test_id.value = 0                    # NEW
 
 
 @cocotb.test()
@@ -189,7 +204,8 @@ async def test_impulse_response(dut):
         in0=(1, 0),
         in1=(0, 0),
         in2=(0, 0),
-        in3=(0, 0)
+        in3=(0, 0),
+        test_id=TEST_IDS["impulse"]
     )
 
 @cocotb.test()
@@ -203,7 +219,8 @@ async def test_dc_input(dut):
         in0=(1, 0),
         in1=(1, 0),
         in2=(1, 0),
-        in3=(1, 0)
+        in3=(1, 0),
+        test_id=TEST_IDS["dc"]
     )
 
 @cocotb.test()
@@ -217,7 +234,8 @@ async def test_complex_values(dut):
         in0=(10, 20),
         in1=(-30, -40),
         in2=(50, -60),
-        in3=(-70, 80)
+        in3=(-70, 80),
+        test_id=TEST_IDS["complex"]
     )
 
 @cocotb.test()
@@ -235,4 +253,4 @@ async def test_randomized(dut):
         in2 = (random.randint(-128, 127), random.randint(-128, 127))
         in3 = (random.randint(-128, 127), random.randint(-128, 127))
         
-        await run_test_case(dut, in0, in1, in2, in3)
+        await run_test_case(dut, in0, in1, in2, in3, test_id=TEST_IDS["random"])

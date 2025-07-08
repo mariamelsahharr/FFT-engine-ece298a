@@ -13,6 +13,8 @@ module fft_engine_tb (
     output logic signed [7:0] out3_real, out3_imag
 );
 
+logic [7:0] current_test_id = 0;
+
     // Dump signals
     string vcd_name;
     initial begin
