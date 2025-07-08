@@ -1,2 +1,7 @@
   - update blcok diagram ->  remove bit reverser + add display/switch interfaces
   - Annotate waveforms
+    - butterfly unit
+    - fft engine
+    - io ctrl
+    - memory ctrl
+    - top fft 
